@@ -1,0 +1,7 @@
+Import("env")
+
+sources = [
+    "folder/Main.cpp"
+]
+
+env.Program("HenloWorld", sources)

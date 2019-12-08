@@ -1,6 +1,7 @@
 import os
-from enum import Enum 
 import platform 
+from enum import Enum 
+from pathlib import Path
 
 # SCons imports
 import SCons
@@ -27,18 +28,38 @@ class ZEnv:
         self.compiler = compiler;
         self.argType = argType;
 
-    def Program(self, name: str, sources, variantSource = "", **kwargs):
-        if variantSource is not "":
-            self.VariantDir(name, variantSource)
-            sources = [self.path + "compiling/" + name + "/" + a for a in sources]
-        self.environment.Program(self.path + "bin/" + name, sources, **kwargs)
+    def Program(self, name: str, sources, **kwargs):
+        self.environment.Program("bin/" + name, sources, **kwargs)
 
-    def Library(self, name: str, sources, **kwargs):
+    def Library(self, name: str, sources, variantSource = "", **kwargs):
         self.environment.Library(self.path + "bin/" + name, sources, **kwargs)
 
     def VariantDir(self, target: str, source: str, **kwargs):
-        self.environment.VariantDir(self.path + "compiling/" + target, source)
+        self.environment.VariantDir(target, source)
+
+    def Glob(self, sourceDir, pattern = "**/*.cpp"):
+        paths = []
+        for path in Path(sourceDir).glob(pattern):
+            paths.append(str(path))
+        return paths
+
+    def SConscript(self, script, variant_dir = None, **kwargs):
+        if variant_dir is not None:
+            # Patches the variant dir 
+            variant_dir = self.path + variant_dir
+        else:
+            # Automatic variant detection
+            r = script.rsplit("/", 1)
+            if (len(r) == 2):
+                variant_dir = self.path + r[0]
+            else:
+                variant_dir = self.path
+        exports = {"env": self}
+        if "exports" in kwargs:
+            exports += kwargs["exports"]
         
+        self.environment.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
+
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
     arch = platform.architecture()
@@ -94,7 +115,7 @@ def getCompiler(env):
 
 
 
-def getEnvironment(defaultDebug: bool = True, libraries: bool = True):
+def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17"):
     variables = Script.Variables()
     variables.AddVariables(
         ("debug", "Build with the debug flag and reduced optimization.", True),
@@ -125,6 +146,25 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True):
         env["CXX"] = CXX
         env["CC"] = CC
     path = "build/" + determinePath(env, compiler, env["debug"])
+
+    compileFlags = ""
+    
+    if (argType == CompilerType.POSIX):
+        compileFlags += "-std=" + stdlib + " -pedantic -Wall -Wextra -Wno-c++11-narrowing"
+        if env["debug"]:
+            compileFlags += " -g -O0 "
+        else:
+            compileFlags += " -O3 "
+    else:
+        # Note to self: /W4 and /Wall spews out warnings for dependencies. Roughly equivalent to -Wall -Wextra on stereoids 
+        compileFlags += "/std:" + stdlib + " /W3 "
+        if env["debug"]:
+            env.Append(LINKFLAGS = ["/DEBUG"])
+        else:
+            compileFlags += " /O2 "
+
+    env.Append(CXXFLAGS = compileFlags)
+
 
     return ZEnv(env, path, env["debug"], compiler, argType)
 
