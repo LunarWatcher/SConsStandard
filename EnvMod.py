@@ -6,7 +6,7 @@ from pathlib import Path
 # SCons imports
 import SCons
 import SCons.Script as Script
-from SCons.Script import Variables, EnumVariable, Environment, Tool
+from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool
 
 # TODO: Add support for cross compiling to a different platform (options + returning platform)
 
@@ -118,8 +118,8 @@ def getCompiler(env):
 def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17"):
     variables = Script.Variables()
     variables.AddVariables(
-        ("debug", "Build with the debug flag and reduced optimization.", True),
-        ("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
+        BoolVariable("debug", "Build with the debug flag and reduced optimization.", True),
+        BoolVariable("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
 
     )
 
