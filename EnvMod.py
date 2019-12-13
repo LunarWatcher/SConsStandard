@@ -122,11 +122,19 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         BoolVariable("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
 
     )
+    env = {
+        "PATH": os.environ["PATH"]
+    }
+    if "TEMP" in os.environ:
+        env["TEMP"] = os.environ["TEMP"]
+
+    tools = []
+    if "windows" in platform.platform().lower():
+        if "CXX" in os.environ and os.environ["CXX"] in ["clang++", "g++"]:
+            tools.append("mingw")
 
     env = Environment(variables = variables, 
-                      ENV = {
-                          "PATH": os.environ["PATH"]
-                      }) 
+                      ENV = env, tools = tools) 
     
     (compiler, argType) = getCompiler(env)
     print("Detected compiler: {}".format(compiler))
@@ -145,6 +153,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         Tool("mingw")(env)
         env["CXX"] = CXX
         env["CC"] = CC
+        
     path = "build/" + determinePath(env, compiler, env["debug"])
 
     compileFlags = ""
