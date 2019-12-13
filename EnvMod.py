@@ -122,20 +122,21 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         BoolVariable("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
 
     )
-    env = {
+    envVars = {
         "PATH": os.environ["PATH"]
     }
     if "TEMP" in os.environ:
-        env["TEMP"] = os.environ["TEMP"]
+        envVars["TEMP"] = os.environ["TEMP"]
 
     tools = []
     if "windows" in platform.platform().lower():
         if "CXX" in os.environ and os.environ["CXX"] in ["clang++", "g++"]:
-            tools.append("mingw")
-
+            tools.append("mingw") # Preliminary MinGW mitigation
+        else:
+            tools = None;
+    else: tools = None;
     env = Environment(variables = variables, 
-                      ENV = env, tools = tools) 
-    
+                      ENV = envVars, tools = tools) 
     (compiler, argType) = getCompiler(env)
     print("Detected compiler: {}".format(compiler))
     
