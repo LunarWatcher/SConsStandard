@@ -6,7 +6,7 @@ from pathlib import Path
 # SCons imports
 import SCons
 import SCons.Script as Script
-from SCons.Script import Variables, EnumVariable, Environment, Tool
+from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool
 
 # TODO: Add support for cross compiling to a different platform (options + returning platform)
 
@@ -149,16 +149,25 @@ def getCompiler(env):
 def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17", useSan = True):
     variables = Script.Variables()
     variables.AddVariables(
-        ("debug", "Build with the debug flag and reduced optimization.", True),
-        ("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
+        BoolVariable("debug", "Build with the debug flag and reduced optimization.", True),
+        BoolVariable("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
 
     )
-
-    env = Environment(variables = variables, 
-                      ENV = {
+    envVars = {
                           "PATH": os.environ["PATH"]
-                      }) 
-    
+    }
+    if "TEMP" in os.environ:
+        envVars["TEMP"] = os.environ["TEMP"]
+
+    tools = []
+    if "windows" in platform.platform().lower():
+        if "CXX" in os.environ and os.environ["CXX"] in ["clang++", "g++"]:
+            tools.append("mingw") # Preliminary MinGW mitigation
+        else:
+            tools = None;
+    else: tools = None;
+    env = Environment(variables = variables, 
+                      ENV = envVars, tools = tools) 
     (compiler, argType) = getCompiler(env)
     print("Detected compiler: {}. Running debug: {}".format(compiler, env["debug"]))
     
@@ -176,6 +185,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         Tool("mingw")(env)
         env["CXX"] = CXX
         env["CC"] = CC
+        
     path = "build/" + determinePath(env, compiler, env["debug"])
 
     compileFlags = ""
