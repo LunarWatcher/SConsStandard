@@ -17,7 +17,7 @@ class CompilerType(Enum):
     
     # Argument style: /whatever
     # Examples: clang-cl, MSVC
-    MSVC_COMPATIBLE = 2
+    MSVC_COMPATIBLE = 2 
 
 class ZEnv:
 
@@ -27,6 +27,13 @@ class ZEnv:
         self.debug = debug;
         self.compiler = compiler;
         self.argType = argType;
+        
+        self.sourceFlags = environment["CXXFLAGS"]
+        print(self.sourceFlags)
+
+        self.sanitizers = []
+        self.libraries = []
+        self.compilerFlags = []
 
     def Program(self, name: str, sources, **kwargs):
         self.environment.Program("bin/" + name, sources, **kwargs)
@@ -36,7 +43,7 @@ class ZEnv:
 
     def VariantDir(self, target: str, source: str, **kwargs):
         self.environment.VariantDir(target, source)
-
+    
     def Glob(self, sourceDir, pattern = "**/*.cpp"):
         paths = []
         for path in Path(sourceDir).glob(pattern):
@@ -59,6 +66,29 @@ class ZEnv:
             exports += kwargs["exports"]
         
         self.environment.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
+    
+    def withLibraries(self, libraries: list, append: bool = True):
+        """
+        Specifies libraries to link. Note that this should not be used for dependencies imported through conan,
+        as those are set when the import is handled. 
+        """
+        if append:
+            self.environment.Append(LIBS = libraries)
+        else:
+            self.environment.Prepend(LIBS = libraries)
+
+    def getBinPath(self):
+        """
+        Utility method for cross-environment stuff, like for cases where you
+        have a Program depending on a Library
+        """
+        return self.path + "bin/"
+
+    def appendLibPath(self, libPath: str):
+        if type(libPath) is not str:
+            raise RuntimeError("You can only append strings, not " + str(type(libPath)))
+        self.environment.Append(LIBPATH = [libPath])
+        
 
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
@@ -66,7 +96,7 @@ def determinePath(env, compiler, debug, crossCompile = False):
     pf = env["PLATFORM"]
     path = f"{compiler}.{pf}.{arch[0]}."
 
-    path += f"{'dbg' if debug else 'release'}/" 
+    path += f"{'dbg' if debug == True else 'release'}/" 
     return path
 
 def normalizeCompilerName(name: str):
@@ -76,6 +106,8 @@ def normalizeCompilerName(name: str):
         return "clang"
     elif name == "msvc" or name == "cl":
         return "msvc"
+    elif name == "clang-cl":
+        return "clang-cl" # Silence the failure warning. 
     print("WARNING: Unknown compiler detected ({}). Normalization failed. Usage of this compiler may have unintended side-effects.".format(name))
     return name
 
@@ -114,8 +146,7 @@ def getCompiler(env):
     return (normalizeCompilerName(it2[0]), CompilerType.POSIX) 
 
 
-
-def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17"):
+def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17", useSan = True):
     variables = Script.Variables()
     variables.AddVariables(
         ("debug", "Build with the debug flag and reduced optimization.", True),
@@ -129,7 +160,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
                       }) 
     
     (compiler, argType) = getCompiler(env)
-    print("Detected compiler: {}".format(compiler))
+    print("Detected compiler: {}. Running debug: {}".format(compiler, env["debug"]))
     
     if "TERM" in os.environ:
         env["ENV"]["TERM"] = os.environ["TERM"]
@@ -151,20 +182,37 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
     
     if (argType == CompilerType.POSIX):
         compileFlags += "-std=" + stdlib + " -pedantic -Wall -Wextra -Wno-c++11-narrowing"
-        if env["debug"]:
+        if env["debug"] == True:
             compileFlags += " -g -O0 "
         else:
             compileFlags += " -O3 "
     else:
         # Note to self: /W4 and /Wall spews out warnings for dependencies. Roughly equivalent to -Wall -Wextra on stereoids 
         compileFlags += "/std:" + stdlib + " /W3 "
-        if env["debug"]:
+        if env["debug"] == True:
             env.Append(LINKFLAGS = ["/DEBUG"])
         else:
             compileFlags += " /O2 "
 
     env.Append(CXXFLAGS = compileFlags)
 
+    if env["debug"] == True:
+        baseLibs = []
+        if useSan and argType == CompilerType.POSIX:
+            env.Append(CPPFLAGS = ["-fsanitize=undefined"])
+            baseLibs = ["ubsan"]
+            if env["PLATFORM"] != "win32":
+                env.Append(CPPFLAGS = ["-fsanitize=memory"])
+                baseLibs.append("msan")
+        zEnv = ZEnv(env, path, env["debug"], compiler, argType)
+        
+        if env["PLATFORM"] != "win32":
+            zEnv.withLibraries(baseLibs)
+        else:
+            print("WARNING: Windows detected. MinGW doesn't have libubsan. Using crash instead (-fsanitize-undefined-trap-on-error)")
+            env.Append(CPPFLAGS = ["-fsanitize-undefined-trap-on-error"])
+        return zEnv()
 
     return ZEnv(env, path, env["debug"], compiler, argType)
+
 
