@@ -154,7 +154,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
 
     )
     envVars = {
-                          "PATH": os.environ["PATH"]
+        "PATH": os.environ["PATH"]
     }
     if "TEMP" in os.environ:
         envVars["TEMP"] = os.environ["TEMP"]
