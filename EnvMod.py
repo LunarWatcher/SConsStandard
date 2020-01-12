@@ -1,5 +1,6 @@
 import os
 import platform 
+import json
 from enum import Enum 
 from pathlib import Path
 
@@ -88,7 +89,44 @@ class ZEnv:
         if type(libPath) is not str:
             raise RuntimeError("You can only append strings, not " + str(type(libPath)))
         self.environment.Append(LIBPATH = [libPath])
+
+    def withConan(self, options = None, enableUpdateFlag = True):
         
+        from conans.client.conan_api import ConanAPIV1 as conan_api
+        from conans import __version__ as conan_version
+
+        conan, _, _ = conan_api.factory()
+
+        buildDirectory = os.path.join(os.getcwd(), self.path)
+        if not os.path.exists(buildDirectory):
+            os.makedirs(buildDirectory)
+        
+        
+        data = {
+            "modified": 0
+        }
+        if os.path.isfile(self.path + "EnvMod.json"):
+            with open(self.path + "EnvMod.json", "r") as f:
+                data = json.load(f)
+
+        conanfilePath = os.path.join(os.getcwd(), "conanfile.txt")
+        lastMod = os.path.getmtime(conanfilePath)
+        if data["modified"] < lastMod:
+            profile = self.environment["profile"] if "profile" in self.environment else "default"
+            conan.install(conanfilePath, 
+                    generators = ["scons"], 
+                    install_folder = buildDirectory,
+                    options = options,
+                    build = [ "missing" ],
+                    profile_names = [ profile ])                
+            data["modified"] = lastMod
+            with open(self.path + "EnvMod.json", "w") as f:
+                json.dump(data, f)
+
+        conan = self.environment.SConscript(self.path + "SConscript_conan")
+
+        self.environment.MergeFlags(conan["conan"])
+
 
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
@@ -151,7 +189,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
     variables.AddVariables(
         BoolVariable("debug", "Build with the debug flag and reduced optimization.", True),
         BoolVariable("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
-
+        ("profile", "Which profile to use for Conan, if Conan is enabled", "default")
     )
     envVars = {
         "PATH": os.environ["PATH"]
@@ -221,7 +259,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         else:
             print("WARNING: Windows detected. MinGW doesn't have libubsan. Using crash instead (-fsanitize-undefined-trap-on-error)")
             env.Append(CPPFLAGS = ["-fsanitize-undefined-trap-on-error"])
-        return zEnv()
+        return zEnv
 
     return ZEnv(env, path, env["debug"], compiler, argType)
 

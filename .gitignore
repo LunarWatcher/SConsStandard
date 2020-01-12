@@ -4,3 +4,4 @@ __pycache__
 .sconsign.dblite
 Main.cpp
 src/
+conanfile.txt
