@@ -256,7 +256,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
             baseLibs = ["ubsan"]
             if env["PLATFORM"] != "win32":
                 env.Append(CPPFLAGS = ["-fsanitize=memory"])
-                baseLibs.append("msan")
+
         zEnv = ZEnv(env, path, env["debug"], compiler, argType)
         
         if env["PLATFORM"] != "win32":
