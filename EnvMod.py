@@ -90,6 +90,11 @@ class ZEnv:
             raise RuntimeError("You can only append strings, not " + str(type(libPath)))
         self.environment.Append(LIBPATH = [libPath])
 
+    def appendSourcePath(self, sourcePath: str):
+        if type(sourcePath) is not str:
+            raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
+        self.environment.Append(CPPPATH = [sourcePath])
+
     def withConan(self, options = None, enableUpdateFlag = True):
         
         from conans.client.conan_api import ConanAPIV1 as conan_api
