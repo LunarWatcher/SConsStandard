@@ -34,15 +34,16 @@ class ZEnv:
         self.sanitizers = []
         self.libraries = []
         self.compilerFlags = []
+        self.variantDir = ""
 
     def Program(self, name: str, sources, **kwargs):
-        self.environment.Program(name, sources, **kwargs)
+        return self.environment.Program("bin/" + name, sources, **kwargs)
 
     def Library(self, name: str, sources, **kwargs):
-        return self.environment.Library(name, sources, **kwargs)
+        return self.environment.Library("bin/" + name, sources, **kwargs)
 
     def SharedLibrary(self, name: str, sources, **kwargs):
-        return self.environment.SharedLibrary(name, sources, **kwargs)
+        return self.environment.SharedLibrary("bin/" + name, sources, **kwargs)
 
     def VariantDir(self, target: str, source: str, **kwargs):
         self.environment.VariantDir(target, source)
@@ -68,7 +69,7 @@ class ZEnv:
     def SConscript(self, script, variant_dir = None, **kwargs):
         if variant_dir is not None:
             # Patches the variant dir 
-            variant_dir = self.path + variant_dir
+            variant_dir = self.path + "/" + variant_dir
         else:
             # Automatic variant detection
             r = script.rsplit("/", 1)
@@ -76,9 +77,11 @@ class ZEnv:
                 variant_dir = self.path + r[0]
             else:
                 variant_dir = self.path
+        self.variantDir = variant_dir
         exports = {"env": self}
         if "exports" in kwargs:
-            exports += kwargs["exports"]
+            exports.update(kwargs["exports"])
+            del kwargs["exports"]
         
         return self.environment.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
     
@@ -97,7 +100,7 @@ class ZEnv:
         Utility method for cross-environment stuff, like for cases where you
         have a Program depending on a Library
         """
-        return self.path + "bin/"
+        return (self.path if self.variantDir == "" else self.variantDir) + "/bin/"
 
     def appendLibPath(self, libPath: str):
         if type(libPath) is not str:
@@ -263,18 +266,16 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
 
     env.Append(CXXFLAGS = compileFlags)
 
-    if env["debug"] == True:
-        baseLibs = []
-        if useSan and argType == CompilerType.POSIX:
+    if env["debug"] == True and useSan:
+
+        if argType == CompilerType.POSIX:
             env.Append(CPPFLAGS = ["-fsanitize=undefined"])
-            baseLibs = ["ubsan"]
-            if env["PLATFORM"] != "win32":
-                env.Append(CPPFLAGS = ["-fsanitize=memory"])
 
         zEnv = ZEnv(env, path, env["debug"], compiler, argType)
         
-        if env["PLATFORM"] != "win32":
-            zEnv.withLibraries(baseLibs)
+        if env["PLATFORM"] != "win32" :
+            env.Append(LINKFLAGS=["-fsanitize=undefined"])
+
         else:
             print("WARNING: Windows detected. MinGW doesn't have libubsan. Using crash instead (-fsanitize-undefined-trap-on-error)")
             env.Append(CPPFLAGS = ["-fsanitize-undefined-trap-on-error"])
