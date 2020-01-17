@@ -30,26 +30,40 @@ class ZEnv:
         self.argType = argType;
         
         self.sourceFlags = environment["CXXFLAGS"]
-        print(self.sourceFlags)
 
         self.sanitizers = []
         self.libraries = []
         self.compilerFlags = []
 
     def Program(self, name: str, sources, **kwargs):
-        self.environment.Program("bin/" + name, sources, **kwargs)
+        self.environment.Program(name, sources, **kwargs)
 
-    def Library(self, name: str, sources, variantSource = "", **kwargs):
-        self.environment.Library(self.path + "bin/" + name, sources, **kwargs)
+    def Library(self, name: str, sources, **kwargs):
+        return self.environment.Library(name, sources, **kwargs)
+
+    def SharedLibrary(self, name: str, sources, **kwargs):
+        return self.environment.SharedLibrary(name, sources, **kwargs)
 
     def VariantDir(self, target: str, source: str, **kwargs):
         self.environment.VariantDir(target, source)
-    
-    def Glob(self, sourceDir, pattern = "**/*.cpp"):
+   
+    def Flavor(self, name: str, source = None, **kwargs):
+        if source is None:
+            # Used as a fallback to only type in once. Especially useful for lazy naming
+            source = name 
+        self.environment.VariantDir(self.path + "/" + name, source, **kwargs)
+
+    def Glob(self, pattern, **kwargs):
+        return self.environment.Glob(pattern, **kwargs)
+
+    def CGlob(self, sourceDir, pattern = "**/*.cpp"):
         paths = []
         for path in Path(sourceDir).glob(pattern):
             paths.append(str(path))
         return paths
+
+    def FlavorSConscript(self, flavorName, script, **kwargs):
+        return self.SConscript(self.path + "/" + flavorName + "/" + script, **kwargs)
 
     def SConscript(self, script, variant_dir = None, **kwargs):
         if variant_dir is not None:
@@ -66,7 +80,7 @@ class ZEnv:
         if "exports" in kwargs:
             exports += kwargs["exports"]
         
-        self.environment.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
+        return self.environment.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
     
     def withLibraries(self, libraries: list, append: bool = True):
         """
