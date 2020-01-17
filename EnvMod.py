@@ -112,7 +112,7 @@ class ZEnv:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
         self.environment.Append(CPPPATH = [sourcePath])
 
-    def withConan(self, options = None, enableUpdateFlag = True):
+    def withConan(self, options = None, settings = None, enableUpdateFlag = True):
         
         from conans.client.conan_api import ConanAPIV1 as conan_api
         from conans import __version__ as conan_version
@@ -135,10 +135,15 @@ class ZEnv:
         lastMod = os.path.getmtime(conanfilePath)
         if data["modified"] < lastMod:
             profile = self.environment["profile"] if "profile" in self.environment else "default"
+            if "settings" in self.environment:
+                settings = self.environment["settings"].split(",")
+            if "options" in self.environment:
+                options = sself.environment["options"].split(",")
             conan.install(conanfilePath, 
                     generators = ["scons"], 
                     install_folder = buildDirectory,
                     options = options,
+                    settings = settings,
                     build = [ "missing" ],
                     profile_names = [ profile ])                
             data["modified"] = lastMod
@@ -187,7 +192,7 @@ def getCompiler(env):
         if (ccAttempt != None and ccAttempt.strip() != ""): env["CC"] = ccAttempt
     # now, get the compiler
     it1 = env["CXX"]
-    if (it1 == "$CC"):
+    if (it1 == "$CC" or it1 == "cl"):
         # If the compiler equals $CC, then (my condolences,) you're running MSVC.
         # According to the docs, this should be the case. 
         return ("msvc", CompilerType.MSVC_COMPATIBLE)
@@ -211,7 +216,9 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
     variables.AddVariables(
         BoolVariable("debug", "Build with the debug flag and reduced optimization.", True),
         BoolVariable("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
-        ("profile", "Which profile to use for Conan, if Conan is enabled", "default")
+        ("profile", "Which profile to use for Conan, if Conan is enabled", "default"),
+        ("settings", "Settings for Conan.", None),
+        ("options", "Options for Conan", None)
     )
     envVars = {
         "PATH": os.environ["PATH"]
@@ -261,6 +268,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         compileFlags += "/std:" + stdlib + " /W3 "
         if env["debug"] == True:
             env.Append(LINKFLAGS = ["/DEBUG"])
+            env.Append(CPPFLAGS=["/MTd", "/Zi"])
         else:
             compileFlags += " /O2 "
 
