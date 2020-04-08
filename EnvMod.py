@@ -154,6 +154,13 @@ class ZEnv:
 
         self.environment.MergeFlags(conan["conan"])
 
+    def withCompilationDB(self, output = ""):
+        """
+        @param output    Defines the output folder. Dumps into root if None. 
+        """
+
+        if self.compiler == "clang":
+            self.environment.Append(CXXFLAGS = [ "-MJ" + output + "compile_info.json" ])
 
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
