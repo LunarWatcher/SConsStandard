@@ -55,6 +55,14 @@ class ZEnv:
         self.environment.VariantDir(self.path + "/" + name, source, **kwargs)
 
     def Glob(self, pattern, **kwargs):
+        """
+        Wrapper around SCon's Glob method.
+        Note that this is NOT recursive!
+        folder/*.cpp means folder/*.cpp, not
+        folder/subfolder/*.cpp. 
+        This is a limitation of SCons, and one I'll
+        have to figure out a workaround for Some Day:tm:
+        """
         return self.environment.Glob(pattern, **kwargs)
 
     def CGlob(self, sourceDir, pattern = "**/*.cpp"):
