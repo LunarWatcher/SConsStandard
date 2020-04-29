@@ -2,6 +2,8 @@
 
 This is my standard implementation of the basic components in a SConstruct. This is to save time and not have to re-write code every time I have a project. This will expand with new features as I stumble over a need for them, so it will not be a 100% perfect implementation for all cases. It's also based on my project standard. 
 
+Note that this is still SCons, just with a bit of added code on top so I don't have to re-write all my code from scratch every time I start a project. SCons' own features have not been hidden - the modded environment has an `environment` field, which is a standard SCons environment.
+
 # Usage
 
 ```
@@ -16,7 +18,7 @@ import SConsStandard.EnvMod
 # of the environment, including processing of variables.
 env = EnvMod.getEnvironment()
 # type(env) = ZEnv(), a wrapper around environment. Note that it's a wrapper, not a child class.
-# For access to unimplemented behavior, `env.env` returns the SCons.Script.Environment. 
+# For access to unimplemented behavior, `env.environment` returns the SCons.Script.Environment. 
 
 # Create a program!  
 env.SConscript("src/SConscript", duplicate = 0)

@@ -1,13 +1,15 @@
 import os
-import platform 
+import platform
 import json
-from enum import Enum 
+from enum import Enum
 from pathlib import Path
 
 # SCons imports
 import SCons
 import SCons.Script as Script
-from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool
+from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool, Configure
+# Lib imports
+from . import utils
 
 # TODO: Add support for cross compiling to a different platform (options + returning platform)
 
@@ -15,10 +17,10 @@ class CompilerType(Enum):
     # Argument style: -whatever
     # examples: Clang, GCC
     POSIX = 1
-    
+
     # Argument style: /whatever
     # Examples: clang-cl, MSVC
-    MSVC_COMPATIBLE = 2 
+    MSVC_COMPATIBLE = 2
 
 class ZEnv:
 
@@ -28,13 +30,15 @@ class ZEnv:
         self.debug = debug;
         self.compiler = compiler;
         self.argType = argType;
-        
+
         self.sourceFlags = environment["CXXFLAGS"]
 
         self.sanitizers = []
         self.libraries = []
         self.compilerFlags = []
         self.variantDir = ""
+
+        self.stdlib = None
 
     def Program(self, name: str, sources, **kwargs):
         return self.environment.Program("bin/" + name, sources, **kwargs)
@@ -47,11 +51,11 @@ class ZEnv:
 
     def VariantDir(self, target: str, source: str, **kwargs):
         self.environment.VariantDir(target, source)
-   
+
     def Flavor(self, name: str, source = None, **kwargs):
         if source is None:
             # Used as a fallback to only type in once. Especially useful for lazy naming
-            source = name 
+            source = name
         self.environment.VariantDir(self.path + "/" + name, source, **kwargs)
 
     def Glob(self, pattern, **kwargs):
@@ -59,7 +63,7 @@ class ZEnv:
         Wrapper around SCon's Glob method.
         Note that this is NOT recursive!
         folder/*.cpp means folder/*.cpp, not
-        folder/subfolder/*.cpp. 
+        folder/subfolder/*.cpp.
         This is a limitation of SCons, and one I'll
         have to figure out a workaround for Some Day:tm:
         """
@@ -76,7 +80,7 @@ class ZEnv:
 
     def SConscript(self, script, variant_dir = None, **kwargs):
         if variant_dir is not None:
-            # Patches the variant dir 
+            # Patches the variant dir
             variant_dir = self.path + "/" + variant_dir
         else:
             # Automatic variant detection
@@ -90,13 +94,13 @@ class ZEnv:
         if "exports" in kwargs:
             exports.update(kwargs["exports"])
             del kwargs["exports"]
-        
+
         return self.environment.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
-    
+
     def withLibraries(self, libraries: list, append: bool = True):
         """
         Specifies libraries to link. Note that this should not be used for dependencies imported through conan,
-        as those are set when the import is handled. 
+        as those are set when the import is handled.
         """
         if append:
             self.environment.Append(LIBS = libraries)
@@ -115,13 +119,14 @@ class ZEnv:
             raise RuntimeError("You can only append strings, not " + str(type(libPath)))
         self.environment.Append(LIBPATH = [libPath])
 
+
     def appendSourcePath(self, sourcePath: str):
         if type(sourcePath) is not str:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
         self.environment.Append(CPPPATH = [sourcePath])
 
     def withConan(self, options = None, settings = None, enableUpdateFlag = True):
-        
+
         from conans.client.conan_api import ConanAPIV1 as conan_api
         from conans import __version__ as conan_version
 
@@ -130,8 +135,7 @@ class ZEnv:
         buildDirectory = os.path.join(os.getcwd(), self.path)
         if not os.path.exists(buildDirectory):
             os.makedirs(buildDirectory)
-        
-        
+
         data = {
             "modified": 0
         }
@@ -147,13 +151,13 @@ class ZEnv:
                 settings = self.environment["settings"].split(",")
             if "options" in self.environment:
                 options = sself.environment["options"].split(",")
-            conan.install(conanfilePath, 
-                    generators = ["scons"], 
+            conan.install(conanfilePath,
+                    generators = ["scons"],
                     install_folder = buildDirectory,
                     options = options,
                     settings = settings,
                     build = [ "missing" ],
-                    profile_names = [ profile ])                
+                    profile_names = [ profile ])
             data["modified"] = lastMod
             with open(self.path + "EnvMod.json", "w") as f:
                 json.dump(data, f)
@@ -164,41 +168,60 @@ class ZEnv:
 
     def withCompilationDB(self, output = ""):
         """
-        @param output    Defines the output folder. Dumps into root if None. 
+        @param output    Defines the output folder. Dumps into root if None.
         """
 
         if self.compiler == "clang":
             self.environment.Append(CXXFLAGS = [ "-MJ" + output + "compile_info.json" ])
 
+    # Configuration utilities
+    def configure(self):
+        return utils.ConfigContext(self)
+
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
+    """
+    Determines the path for the build output.
+    This is enabled to support multi-compiler attempts, and it's later
+    meant to faciliate for cross-compilation, if I find a need to add it.
+    """
     arch = platform.architecture()
     pf = env["PLATFORM"]
     path = f"{compiler}.{pf}.{arch[0]}."
 
-    path += f"{'dbg' if debug == True else 'release'}/" 
+    path += f"{'dbg' if debug == True else 'release'}/"
     return path
 
 def normalizeCompilerName(name: str):
-    if (name == "gcc" or name == "g++"):
+    """
+    This function attempts to normalize compiler inputs (through CXX)
+    into a uniform variant usable by the code.
+
+    This risks breaking unknown compilers, which is an unfortunate side-effect,
+    but it allows for the build code to run compatibility settings against
+    the individual compilers.
+
+    I'll rather add any other compilers here if necessary.
+    """
+    if (name.startswith("gcc") or name.startswith("g++")):
         return "gcc"
-    elif name == "clang" or name == "clang++":
+    elif name.startswith("clang") or name.startswith("clang++"):
         return "clang"
-    elif name == "msvc" or name == "cl":
+    elif name.startswith("msvc") or name == "cl":
         return "msvc"
-    elif name == "clang-cl":
-        return "clang-cl" # Silence the failure warning. 
+    elif name.startswith("clang-cl"):
+        return "clang-cl" # Silence the failure warning.
     print("WARNING: Unknown compiler detected ({}). Normalization failed. Usage of this compiler may have unintended side-effects.".format(name))
     return name
 
 def getCompiler(env):
     """ Gets the compiler, along with its predicted type.
-    Note that this makes an educated guess based on my knowledge of compilers. 
-    Any edge cases deviating from either of the two standards will need to be 
-    added explicitly, but that's something I'll need to do on a per-case basis. 
+    Note that this makes an educated guess based on my knowledge of compilers.
+    Any edge cases deviating from either of the two standards will need to be
+    added explicitly, but that's something I'll need to do on a per-case basis.
     """
-    
-    # Check for system overrides. 
+
+    # Check for system overrides.
     if (env["systemCompiler"] == True):
         cxxAttempt = os.getenv("CXX")
         ccAttempt = os.getenv("CC")
@@ -209,21 +232,21 @@ def getCompiler(env):
     it1 = env["CXX"]
     if (it1 == "$CC" or it1 == "cl"):
         # If the compiler equals $CC, then (my condolences,) you're running MSVC.
-        # According to the docs, this should be the case. 
+        # According to the docs, this should be the case.
         return ("msvc", CompilerType.MSVC_COMPATIBLE)
-    
-    # if the environment variable CXX is used, this may not be a single word. 
+
+    # if the environment variable CXX is used, this may not be a single word.
     # A manual override (such as `clang++ -target x86_64-pc-windows-gnu` would break later detection as well).
     it2 = it1.split(" ", maxsplit=1)
-    
+
     if (it2[0] == "clang-cl"):
-        # clang-cl is still Clang, but takes MSVC-style input. 
+        # clang-cl is still Clang, but takes MSVC-style input.
         return ("clang-cl", CompilerType.MSVC_COMPATIBLE)
-    
-    # For undefined cases, we'll assume it's a POSIX-compatible compiler. 
+
+    # For undefined cases, we'll assume it's a POSIX-compatible compiler.
     # (Note that this doesn't care what the target system is. This is just to detect the compiler being used,
     # and by extension which arguments to use)
-    return (normalizeCompilerName(it2[0]), CompilerType.POSIX) 
+    return (normalizeCompilerName(it2[0]), CompilerType.POSIX)
 
 
 def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17", useSan = True):
@@ -248,16 +271,16 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         else:
             tools = None;
     else: tools = None;
-    env = Environment(variables = variables, 
-                      ENV = envVars, tools = tools) 
+    env = Environment(variables = variables,
+                      ENV = envVars, tools = tools)
     (compiler, argType) = getCompiler(env)
     print("Detected compiler: {}. Running debug: {}".format(compiler, env["debug"]))
-    
+
     if "TERM" in os.environ:
         env["ENV"]["TERM"] = os.environ["TERM"]
-    
-    if (env["PLATFORM"] == "win32" 
-            and compiler is not "clang-cl" 
+
+    if (env["PLATFORM"] == "win32"
+            and compiler is not "clang-cl"
             and compiler is not "msvc"):
         print("Forcing MinGW mode")
         # We also need to normalize the compiler afterwards.
@@ -267,11 +290,11 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         Tool("mingw")(env)
         env["CXX"] = CXX
         env["CC"] = CC
-        
+
     path = "build/" + determinePath(env, compiler, env["debug"])
 
     compileFlags = ""
-    
+
     if (argType == CompilerType.POSIX):
         compileFlags += "-std=" + stdlib + " -pedantic -Wall -Wextra -Wno-c++11-narrowing"
         if env["debug"] == True:
@@ -279,7 +302,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         else:
             compileFlags += " -O3 "
     else:
-        # Note to self: /W4 and /Wall spews out warnings for dependencies. Roughly equivalent to -Wall -Wextra on stereoids 
+        # Note to self: /W4 and /Wall spews out warnings for dependencies. Roughly equivalent to -Wall -Wextra on stereoids
         compileFlags += "/std:" + stdlib + " /W3 "
         if env["debug"] == True:
             env.Append(LINKFLAGS = ["/DEBUG"])
@@ -295,7 +318,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
             env.Append(CPPFLAGS = ["-fsanitize=undefined"])
 
         zEnv = ZEnv(env, path, env["debug"], compiler, argType)
-        
+
         if env["PLATFORM"] != "win32" :
             env.Append(LINKFLAGS=["-fsanitize=undefined"])
 
