@@ -8,6 +8,7 @@ from SCons.SConf import CheckContext
 import platform
 
 def detectStdlib(context: CheckContext, zenv):
+    context.Message("Detecting stdlib... ")
     if (zenv.stdlib):
         context.Result("Detected stdlib (cached): " + zenv.stdlib)
         return zenv.stdlib
@@ -51,10 +52,11 @@ def detectStdlib(context: CheckContext, zenv):
         raise RuntimeError("Failed to detect stdlib.")
 
     zenv.stdlib = stdlib
-    context.Result("Detected stdlib: " + stdlib)
+    context.Result(stdlib)
     return stdlib
 
 def detectFilesystem(context: CheckContext, zenv):
+    context.Message("Detecting filesystem... ")
     """
     This function makes two assumptions in its check:
     1. You (the developer) handles the flags
