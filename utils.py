@@ -42,7 +42,7 @@ def detectStdlib(context: CheckContext, zenv):
     """
     msvcTest = """
     #include <ciso646>
-    #ifndef _MSVC_STD_VERSION
+    #ifndef _MSVC_STL_VERSION
     #error "not MSVC stl"
     #endif
     int main() {}
