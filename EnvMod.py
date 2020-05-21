@@ -322,7 +322,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         if env["PLATFORM"] != "win32":
             env.Append(LINKFLAGS=["-fsanitize=undefined"])
 
-        else if (compiler != "msvc"):
+        elif (compiler != "msvc"):
             print("WARNING: Windows detected. MinGW doesn't have libubsan. Using crash instead (-fsanitize-undefined-trap-on-error)")
             env.Append(CPPFLAGS = ["-fsanitize-undefined-trap-on-error"])
         return zEnv
