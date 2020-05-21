@@ -13,6 +13,15 @@ def detectStdlib(context: CheckContext, zenv):
         context.Result("Detected stdlib (cached): " + zenv.stdlib)
         return zenv.stdlib
 
+    cisoProbe = """
+    #include <ciso646>
+    int main() {}
+    """
+
+    hasCiso = context.TryCompile(cisoProbe, ".cpp")
+    if not hasCiso:
+        raise RuntimeError("This is gonna get worse before it gets better... ciso646 isn't present")
+
     # TODO: scrap ciso646 in favor of #include<version>
     # ciso646 has been ditched in C++20. Because SCons itself
     # doesn't support C++20 yet, it's fine for the time being,
