@@ -280,8 +280,8 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         env["ENV"]["TERM"] = os.environ["TERM"]
 
     if (env["PLATFORM"] == "win32"
-            and compiler is not "clang-cl"
-            and compiler is not "msvc"):
+            and compiler != "clang-cl"
+            and compiler != "msvc"):
         print("Forcing MinGW mode")
         # We also need to normalize the compiler afterwards.
         # MinGW forces GCC
@@ -319,10 +319,10 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
 
         zEnv = ZEnv(env, path, env["debug"], compiler, argType)
 
-        if env["PLATFORM"] != "win32" :
+        if env["PLATFORM"] != "win32":
             env.Append(LINKFLAGS=["-fsanitize=undefined"])
 
-        else:
+        else if (compiler != "msvc"):
             print("WARNING: Windows detected. MinGW doesn't have libubsan. Using crash instead (-fsanitize-undefined-trap-on-error)")
             env.Append(CPPFLAGS = ["-fsanitize-undefined-trap-on-error"])
         return zEnv
