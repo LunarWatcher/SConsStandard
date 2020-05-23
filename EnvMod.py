@@ -181,6 +181,15 @@ class ZEnv:
     def configure(self):
         return utils.ConfigContext(self)
 
+    def Clone(self):
+        newEnv = ZEnv(self.environment.Clone(), self.path, self.debug, self.compiler,
+                    self.argType)
+        newEnv.sanitizers = self.sanitizers
+        newEnv.libraries = self.libraries
+        newEnv.compilerFlags = self.compilerFlags
+        newEnv.variantDir = self.variantDir
+        newEnv.stdlib = self.stdlib
+
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
     """
