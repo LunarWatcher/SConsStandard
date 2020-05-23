@@ -189,6 +189,7 @@ class ZEnv:
         newEnv.compilerFlags = self.compilerFlags
         newEnv.variantDir = self.variantDir
         newEnv.stdlib = self.stdlib
+        return newEnv
 
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
