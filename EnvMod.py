@@ -200,9 +200,13 @@ class ZEnv:
     def getEnvVar(self, key: str):
         return self.environment[key]
 
-    def includeSysVars(self, *keys):
+    def includeSysVars(self, *keys, **kwargs):
+        if ("all" in kwargs and kwargs["all"] == True):
+            for (key, value) in os.environ:
+                self.environment["ENV"][key] = value;
+            return;
         for key in keys:
-            self.environment[key] = os.environ[key]
+            self.environment["ENV"][key] = os.environ[key]
 
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
