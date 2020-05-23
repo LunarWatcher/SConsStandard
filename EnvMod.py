@@ -206,7 +206,11 @@ class ZEnv:
                 self.environment["ENV"][key] = value;
             return;
         for key in keys:
-            self.environment["ENV"][key] = os.environ[key]
+            try:
+                self.environment["ENV"][key] = os.environ[key]
+            except:
+                pass
+
 
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
