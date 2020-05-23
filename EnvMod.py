@@ -49,6 +49,9 @@ class ZEnv:
     def SharedLibrary(self, name: str, sources, **kwargs):
         return self.environment.SharedLibrary("bin/" + name, sources, **kwargs)
 
+    def StaticLibrary(self, name: str, sources, **kwargs):
+        return self.environment.StaticLibrary("bin/" + name, sources, **kwargs)
+
     def VariantDir(self, target: str, source: str, **kwargs):
         self.environment.VariantDir(target, source)
 
