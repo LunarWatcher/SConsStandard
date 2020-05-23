@@ -197,6 +197,9 @@ class ZEnv:
         newEnv.stdlib = self.stdlib
         return newEnv
 
+    def getEnvVar(self, key: str):
+        return self.environment[key]
+
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
     """
@@ -268,7 +271,7 @@ def getCompiler(env):
     return (normalizeCompilerName(it2[0]), CompilerType.POSIX)
 
 
-def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17", useSan = True):
+def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17", useSan = True, customVariables = None):
     variables = Script.Variables()
     variables.AddVariables(
         BoolVariable("debug", "Build with the debug flag and reduced optimization.", True),
@@ -277,6 +280,13 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         ("settings", "Settings for Conan.", None),
         ("options", "Options for Conan", None)
     )
+
+    if (customVariables != None):
+        if (type(customVariables != list)):
+            raise RuntimeError("customVariables has to be a list");
+        for variable in customVariables:
+            variables.Add(variable)
+
     envVars = {
         "PATH": os.environ["PATH"]
     }
