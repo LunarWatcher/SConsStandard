@@ -194,12 +194,12 @@ class ConfigContext:
             raise RuntimeError("This build doesn't support filesystem")
         if (needsLink):
             if self.zenv.stdlib == "libstdc++":
-                self.zenv.withLibraries("stdc++fs")
+                self.zenv.withLibraries(["stdc++fs"])
             else:
                 # libc++
                 # MSVC doesn't require linking in any configurations, so it's
                 # the only other alternative
-                self.zenv.withLibraries("c++fs")
+                self.zenv.withLibraries(["c++fs"])
 
     def __exit__(self, type, value, traceback):
         print("Configuration done")

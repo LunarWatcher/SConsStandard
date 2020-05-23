@@ -105,10 +105,16 @@ class ZEnv:
         Specifies libraries to link. Note that this should not be used for dependencies imported through conan,
         as those are set when the import is handled.
         """
-        if append:
-            self.environment.Append(LIBS = libraries)
+        aLibs = []
+        if (type(libraries) is list):
+            aLibs = libraries
         else:
-            self.environment.Prepend(LIBS = libraries)
+            aLibs.append(libraries)
+
+        if append:
+            self.environment.Append(LIBS = aLibs)
+        else:
+            self.environment.Prepend(LIBS = aLibs)
 
     def getBinPath(self):
         """
