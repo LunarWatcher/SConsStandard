@@ -202,7 +202,7 @@ class ZEnv:
 
     def includeSysVars(self, *keys, **kwargs):
         if ("all" in kwargs and kwargs["all"] == True):
-            for (key, value) in os.environ:
+            for key, value in os.environ.items():
                 self.environment["ENV"][key] = value;
             return;
         for key in keys:
