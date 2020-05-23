@@ -202,7 +202,7 @@ class ZEnv:
 
     def includeSysVars(self, *keys):
         for key in keys:
-            self.environment["ENV"][key] = os.environ(key)
+            self.environment["ENV"][key] = os.environ[key]
 
 # TODO: Implement cross compilation support
 def determinePath(env, compiler, debug, crossCompile = False):
