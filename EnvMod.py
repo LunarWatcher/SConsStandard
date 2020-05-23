@@ -282,7 +282,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
     )
 
     if (customVariables != None):
-        if (type(customVariables is not list)):
+        if (type(customVariables) is not list):
             raise RuntimeError("customVariables has to be a list");
         for variable in customVariables:
             variables.Add(variable)
