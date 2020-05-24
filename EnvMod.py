@@ -343,7 +343,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
             compileFlags += " -g -O0 "
             if env["coverage"] == True:
                 compileFlags += " -fprofile-arcs -ftest-coverage "
-                env.Append(LINKFLAGS=["-lgcov --coverage"])
+                env.Append(LINKFLAGS=["-lgcov", "-coverage"])
 
         else:
             compileFlags += " -O3 "
