@@ -290,7 +290,8 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         BoolVariable("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
         ("profile", "Which profile to use for Conan, if Conan is enabled", "default"),
         ("settings", "Settings for Conan.", None),
-        ("options", "Options for Conan", None)
+        ("options", "Options for Conan", None),
+        ("coverage", "Adds the --coverage option", False)
     )
 
     if (customVariables != None):
@@ -340,6 +341,8 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         compileFlags += "-std=" + stdlib + " -pedantic -Wall -Wextra -Wno-c++11-narrowing"
         if env["debug"] == True:
             compileFlags += " -g -O0 "
+            if env["coverage"] == True:
+                compileFlags += " --coverage "
         else:
             compileFlags += " -O3 "
     else:
