@@ -291,7 +291,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         ("profile", "Which profile to use for Conan, if Conan is enabled", "default"),
         ("settings", "Settings for Conan.", None),
         ("options", "Options for Conan", None),
-        ("coverage", "Adds the --coverage option", False)
+        BoolVariable("coverage", "Adds the --coverage option", False)
     )
 
     if (customVariables != None):
