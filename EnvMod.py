@@ -341,7 +341,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         compileFlags += "-std=" + stdlib + " -pedantic -Wall -Wextra -Wno-c++11-narrowing"
         if env["debug"] == True:
             compileFlags += " -g -O0 "
-            if env["coverage"] == True:
+            if env["coverage"] == True and not compiler.startswith("clang"):
                 compileFlags += " -fprofile-arcs -ftest-coverage "
                 env.Append(LINKFLAGS=["-lgcov", "-coverage"])
 
