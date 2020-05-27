@@ -341,9 +341,9 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         compileFlags += "-std=" + stdlib + " -pedantic -Wall -Wextra -Wno-c++11-narrowing"
         if env["debug"] == True:
             compileFlags += " -g -O0 "
-            if env["coverage"] == True and not compiler.startswith("clang"):
-                compileFlags += " -fprofile-arcs -ftest-coverage "
-                env.Append(LINKFLAGS=["-lgcov", "-coverage"])
+            if env["coverage"] == True:
+                compileFlags += " --coverage "
+                env.Append(LINKFLAGS=["--coverage"])
 
         else:
             compileFlags += " -O3 "
@@ -353,16 +353,15 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         compileFlags += "/std:" + stdlib + " /W3 /EHsc "
         if env["debug"] == True:
             env.Append(LINKFLAGS = ["/DEBUG"])
-            env.Append(CPPFLAGS=["/MTd", "/Zi"])
+            env.Append(CXXFLAGS=["/MTd", "/Zi"])
         else:
             compileFlags += " /O2 "
-
-    env.Append(CXXFLAGS = compileFlags)
+    env.Append(CXXFLAGS = compileFlags.split(" "))
 
     if env["debug"] == True and useSan:
 
         if argType == CompilerType.POSIX:
-            env.Append(CPPFLAGS = ["-fsanitize=undefined"])
+            env.Append(CXXFLAGS = ["-fsanitize=undefined"])
 
         zEnv = ZEnv(env, path, env["debug"], compiler, argType)
 
@@ -371,7 +370,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
 
         elif (compiler != "msvc"):
             print("WARNING: Windows detected. MinGW doesn't have libubsan. Using crash instead (-fsanitize-undefined-trap-on-error)")
-            env.Append(CPPFLAGS = ["-fsanitize-undefined-trap-on-error"])
+            env.Append(CXXFLAGS = ["-fsanitize-undefined-trap-on-error"])
         return zEnv
 
     return ZEnv(env, path, env["debug"], compiler, argType)
