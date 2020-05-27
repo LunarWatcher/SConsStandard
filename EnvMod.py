@@ -350,7 +350,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
     else:
 
         # Note to self: /W4 and /Wall spews out warnings for dependencies. Roughly equivalent to -Wall -Wextra on stereoids
-        compileFlags += "/std:" + stdlib + " /W3 /EHsc "
+        compileFlags += "/std:" + stdlib + " /W3 /EHsc /FS "
         if env["debug"] == True:
             env.Append(LINKFLAGS = ["/DEBUG"])
             env.Append(CXXFLAGS=["/MTd", "/Zi"])
