@@ -162,6 +162,12 @@ class ConfigContext:
         });
         return self
 
+    def addTest(self, name: str, function):
+        self.config.AddTest(name, function)
+
+    def addTests(self, testMap):
+        self.config.AddTests(testMap)
+
     def test(self, name: str, *args, **kwargs):
         """
         This function either executes an existing test, or adds a new one
