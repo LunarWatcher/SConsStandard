@@ -187,7 +187,7 @@ class ConfigContext:
         # regardless of whether it was just added or not
         if not hasattr(self.config, name):
             raise RuntimeError("Test not registered: " + name)
-        getattr(self.config, name)(*args, **kwargs)
+        return getattr(self.config, name)(*args, **kwargs)
 
     def configureFilesystem(self):
         """
