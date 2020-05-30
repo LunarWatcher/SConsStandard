@@ -185,10 +185,19 @@ class ZEnv:
 
     # Configuration utilities
     def configure(self):
+        """
+        Returns a configuration context.
+        """
         return utils.ConfigContext(self)
 
-    def Clone(self):
-        newEnv = ZEnv(self.environment.Clone(), self.path, self.debug, self.compiler,
+    def Clone(self, *args, **kwargs):
+        """
+        Clones the environment.
+
+        Any args and/or kwargs are forwarded to the environment provided by SCons.
+        These have no effect on the ZEnv, for various implementation reasons.
+        """
+        newEnv = ZEnv(self.environment.Clone(*args, **kwargs), self.path, self.debug, self.compiler,
                     self.argType)
         newEnv.sanitizers = self.sanitizers
         newEnv.libraries = self.libraries
@@ -201,8 +210,29 @@ class ZEnv:
         return self.environment[key]
 
     def includeSysVars(self, *keys, **kwargs):
+        """
+        SCons "sandboxes" the variables. This means that if your tests need specific
+        environment variables, they'll be excluded.
+
+        This method includes a select set of environment variables,
+        or all.
+
+        Usage for singular variables:
+            includeSysVars("envVar1", "envVar2", ...)
+        Usage for all variables:
+            includeSysVars(all=True)
+        Usage for all, but some excluded:
+            includeSysVars("thisVarWillBeExcluded", "soWillThis", all=True)
+
+        Note that including all system variables may negatively affect SCons, and could
+        potentially break compiling.
+        """
         if ("all" in kwargs and kwargs["all"] == True):
             for key, value in os.environ.items():
+                # Skip registered keys.
+                if key in keys:
+                    continue
+
                 self.environment["ENV"][key] = value;
             return;
         for key in keys:
@@ -210,6 +240,12 @@ class ZEnv:
                 self.environment["ENV"][key] = os.environ[key]
             except:
                 pass
+
+    def define(self, variable: str):
+        """
+        This method wraps environment.Append(CPPDEFINES).
+        """
+        self.environment.Append(CPPDEFINES = [ variable ])
 
 
 # TODO: Implement cross compilation support
