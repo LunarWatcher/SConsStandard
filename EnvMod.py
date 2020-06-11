@@ -175,13 +175,18 @@ class ZEnv:
 
         self.environment.MergeFlags(conan["conan"])
 
-    def withCompilationDB(self, output = ""):
+    def withCompilationDB(self, output = "compile_commands.json"):
         """
         @param output    Defines the output folder. Dumps into root if None.
         """
-
-        if self.compiler == "clang":
-            self.environment.Append(CXXFLAGS = [ "-MJ" + output + "compile_info.json" ])
+        # The PR for compilation databases has been merged, but it hasn't been released.
+        # As of the time of writing, this version doesn't exist. 3.1.2 is the latest version.
+        # EnsureSConsVersion exists here to make sure it isn't accidentally used before
+        # the next version is released. They could release a non-minor release (4.0.0 or 3.2.0)
+        # instead of 3.1.3 - this is pure guessing
+        self.env.EnsureSConsVersion(3, 1, 3)
+        self.env.Tool('compilation_db')
+        self.env.CompilationDatabase(output, COMPILATIONDB_USE_ABSPATH=True)
 
     # Configuration utilities
     def configure(self):
