@@ -184,9 +184,9 @@ class ZEnv:
         # EnsureSConsVersion exists here to make sure it isn't accidentally used before
         # the next version is released. They could release a non-minor release (4.0.0 or 3.2.0)
         # instead of 3.1.3 - this is pure guessing
-        self.env.EnsureSConsVersion(3, 1, 3)
-        self.env.Tool('compilation_db')
-        self.env.CompilationDatabase(output, COMPILATIONDB_USE_ABSPATH=True)
+        self.environment.EnsureSConsVersion(3, 1, 3)
+        self.environment.Tool('compilation_db')
+        self.environment.CompilationDatabase(output, COMPILATIONDB_USE_ABSPATH=True)
 
     # Configuration utilities
     def configure(self):
