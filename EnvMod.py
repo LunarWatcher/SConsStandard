@@ -153,6 +153,9 @@ class ZEnv:
                 data = json.load(f)
 
         conanfilePath = os.path.join(os.getcwd(), "conanfile.txt")
+        if not os.path.isfile(conanfilePath):
+            conanfilePath = os.path.join(os.getcwd(), "conanfile.py")
+
         lastMod = os.path.getmtime(conanfilePath)
         if data["modified"] < lastMod:
             profile = self.environment["profile"] if "profile" in self.environment else "default"
