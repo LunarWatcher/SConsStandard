@@ -159,7 +159,7 @@ class ZEnv:
             if "settings" in self.environment:
                 settings = self.environment["settings"].split(",")
             if "options" in self.environment:
-                options = sself.environment["options"].split(",")
+                options = self.environment["options"].split(",")
             conan.install(conanfilePath,
                     generators = ["scons"],
                     install_folder = buildDirectory,
