@@ -63,7 +63,7 @@ class ZEnv:
 
     def Glob(self, pattern, **kwargs):
         """
-        Wrapper around SCon's Glob method.
+        Wrapper around SCons' Glob method.
         Note that this is NOT recursive!
         folder/*.cpp means folder/*.cpp, not
         folder/subfolder/*.cpp.
@@ -134,7 +134,21 @@ class ZEnv:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
         self.environment.Append(CPPPATH = [sourcePath])
 
-    def withConan(self, options = None, settings = None, enableUpdateFlag = True):
+    def withConan(self, options: list = [], settings: list = []):
+        if options is None:
+            options = []
+        elif type(options) is str:
+            options = [options]
+
+        if settings is None:
+            settings = []
+        elif type(settings) is str:
+            settings = [settings]
+
+        if "CUSTOM_CONAN" in os.environ:
+            # Utility for Conan versions installed from source
+            import sys
+            sys.path.append(os.environ["CUSTOM_CONAN"])
 
         from conans.client.conan_api import ConanAPIV1 as conan_api
         from conans import __version__ as conan_version
@@ -160,9 +174,9 @@ class ZEnv:
         if data["modified"] < lastMod:
             profile = self.environment["profile"] if "profile" in self.environment else "default"
             if "settings" in self.environment:
-                settings = self.environment["settings"].split(",")
+                settings = settings + self.environment["settings"].split(",")
             if "options" in self.environment:
-                options = self.environment["options"].split(",")
+                options = options + self.environment["options"].split(",")
             conan.install(conanfilePath,
                     generators = ["scons"],
                     install_folder = buildDirectory,
@@ -182,12 +196,7 @@ class ZEnv:
         """
         @param output    Defines the output folder. Dumps into root if None.
         """
-        # The PR for compilation databases has been merged, but it hasn't been released.
-        # As of the time of writing, this version doesn't exist. 3.1.2 is the latest version.
-        # EnsureSConsVersion exists here to make sure it isn't accidentally used before
-        # the next version is released. They could release a non-minor release (4.0.0 or 3.2.0)
-        # instead of 3.1.3 - this is pure guessing
-        self.environment.EnsureSConsVersion(3, 1, 3)
+        self.environment.EnsureSConsVersion(4, 0, 0)
         self.environment.Tool('compilation_db')
         self.environment.CompilationDatabase(output, COMPILATIONDB_USE_ABSPATH=True)
 
