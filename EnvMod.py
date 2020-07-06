@@ -203,7 +203,6 @@ class ZEnv:
 
         This method returns the database, which you can use to target stuff.
         """
-        self.environment["COMPILATIONDB_USE_ABSPATH"] = True
         self.environment.EnsureSConsVersion(4, 0, 0)
         self.environment.Tool('compilation_db')
         return self.environment.CompilationDatabase(output)
