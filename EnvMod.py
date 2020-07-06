@@ -199,7 +199,7 @@ class ZEnv:
         self.environment["COMPILATIONDB_USE_ABSPATH"] = True
         self.environment.EnsureSConsVersion(4, 0, 0)
         self.environment.Tool('compilation_db')
-        self.environment.CompilationDatabase(output)
+        return self.environment.CompilationDatabase(output)
 
     # Configuration utilities
     def configure(self):
