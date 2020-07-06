@@ -196,9 +196,10 @@ class ZEnv:
         """
         @param output    Defines the output folder. Dumps into root if None.
         """
+        self.environment["COMPILATIONDB_USE_ABSPATH"] = True
         self.environment.EnsureSConsVersion(4, 0, 0)
         self.environment.Tool('compilation_db')
-        self.environment.CompilationDatabase(output, COMPILATIONDB_USE_ABSPATH=True)
+        self.environment.CompilationDatabase(output)
 
     # Configuration utilities
     def configure(self):
