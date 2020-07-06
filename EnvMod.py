@@ -195,6 +195,13 @@ class ZEnv:
     def withCompilationDB(self, output = "compile_commands.json"):
         """
         @param output    Defines the output folder. Dumps into root if None.
+
+        Note that custom targeting may break the compilation database; if you use aliases,
+        specify Default, or otherwise declare specific targets, you may have a bad time:tm:
+        with compilation databases.
+        This can easily be fixed with Depends(target, database).
+
+        This method returns the database, which you can use to target stuff.
         """
         self.environment["COMPILATIONDB_USE_ABSPATH"] = True
         self.environment.EnsureSConsVersion(4, 0, 0)
