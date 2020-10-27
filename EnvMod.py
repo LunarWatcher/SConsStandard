@@ -134,7 +134,7 @@ class ZEnv:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
         self.environment.Append(CPPPATH = [sourcePath])
 
-    def withConan(self, options: list = [], settings: list = []):
+    def withConan(self, conanfile: str = None, options: list = [], settings: list = []):
         if options is None:
             options = []
         elif type(options) is str:
@@ -166,7 +166,7 @@ class ZEnv:
             with open(self.path + "EnvMod.json", "r") as f:
                 data = json.load(f)
 
-        conanfilePath = os.path.join(os.getcwd(), "conanfile.txt")
+        conanfilePath = os.path.join(os.getcwd(), "conanfile.txt") if conanfile is None else conanfile
         if not os.path.isfile(conanfilePath):
             conanfilePath = os.path.join(os.getcwd(), "conanfile.py")
 
