@@ -165,7 +165,7 @@ class ZEnv:
                 if len(filterByUrl) > 0:
                     continue
 
-                filterByName = [eRem for eRem in existingRemotes if eRem.remote_name.lower() == name.lower()]
+                filterByName = [eRem for eRem in existingRemotes if eRem.name.lower() == name.lower()]
                 if (len(filterByName) > 0):
                     import random
                     remote["remote_name"] = remote["remote_name"] + str(random.randint(0, 99999))
