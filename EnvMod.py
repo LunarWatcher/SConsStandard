@@ -134,7 +134,7 @@ class ZEnv:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
         self.environment.Append(CPPPATH = [sourcePath])
 
-    def withConan(self, options: list = [], settings: list = []):
+    def withConan(self, options: list = [], settings: list = [], remotes = []):
         if options is None:
             options = []
         elif type(options) is str:
@@ -154,6 +154,10 @@ class ZEnv:
         from conans import __version__ as conan_version
 
         conan, _, _ = conan_api.factory()
+
+        if type(remotes) == list and len(remotes) != 0:
+            for remote in remotes:
+                conan.remote_add(**remote)
 
         buildDirectory = os.path.join(os.getcwd(), self.path)
         if not os.path.exists(buildDirectory):
@@ -415,7 +419,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
             env.Append(LINKFLAGS = ["/DEBUG"])
             env.Append(CXXFLAGS=["/MTd", "/Zi"])
         else:
-            compileFlags += " /O2 "
+            compileFlags += " /O2 /MT "
     env.Append(CXXFLAGS = compileFlags.split(" "))
 
     if env["debug"] == True and useSan:
