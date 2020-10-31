@@ -157,6 +157,19 @@ class ZEnv:
 
         if type(remotes) == list and len(remotes) != 0:
             for remote in remotes:
+                name = remote["remote_name"]
+                url = remote["url"]
+                existingRemotes = conan.remote_list()
+                
+                filterByUrl = [eRem for eRem in existingRemotes if eRem.url == url]
+                if len(filterByUrl > 0):
+                    continue
+
+                filterByName = [eRem for eRem in existingRemotes if eRem.remote_name.lower() == name.lower()]
+                if (len(filterByName) > 0):
+                    import random
+                    remote["remote_name"] = remote["remote_name"] + str(random.randint(0, 99999))
+
                 conan.remote_add(**remote)
 
         buildDirectory = os.path.join(os.getcwd(), self.path)
