@@ -168,7 +168,7 @@ class ZEnv:
                 filterByName = [eRem for eRem in existingRemotes if eRem.remote_name.lower() == name.lower()]
                 if (len(filterByName) > 0):
                     import random
-                    remote["remote_name"] = remote["remote_name"] + str(random.randint(0, 99999))
+                    remote["remote_name"] = remote["remote_name"] + str(random.randint(0, 99999))
 
                 conan.remote_add(**remote)
 
