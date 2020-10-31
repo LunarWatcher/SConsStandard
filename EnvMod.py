@@ -162,7 +162,7 @@ class ZEnv:
                 existingRemotes = conan.remote_list()
                 
                 filterByUrl = [eRem for eRem in existingRemotes if eRem.url == url]
-                if len(filterByUrl > 0):
+                if len(filterByUrl) > 0:
                     continue
 
                 filterByName = [eRem for eRem in existingRemotes if eRem.remote_name.lower() == name.lower()]
