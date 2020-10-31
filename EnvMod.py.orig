@@ -134,7 +134,11 @@ class ZEnv:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
         self.environment.Append(CPPPATH = [sourcePath])
 
-    def withConan(self, conanfile: str = None, options: list = [], settings: list = [], remotes = []):
+<<<<<<< HEAD
+    def withConan(self, options: list = [], settings: list = [], remotes = []):
+=======
+    def withConan(self, conanfile: str = None, options: list = [], settings: list = []):
+>>>>>>> 059ab2300f12b9fd3bee3a287564614b570d7ed1
         if options is None:
             options = []
         elif type(options) is str:
