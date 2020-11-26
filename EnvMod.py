@@ -368,7 +368,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         ("profile", "Which profile to use for Conan, if Conan is enabled", "default"),
         ("settings", "Settings for Conan.", None),
         ("options", "Options for Conan", None),
-        ("dynamic", "(Windows only!) Whether to use /MT or /MD. False for MT, true for MD", False)
+        ("dynamic", "(Windows only!) Whether to use /MT or /MD. False for MT, true for MD", False),
         BoolVariable("coverage", "Adds the --coverage option", False)
     )
 
