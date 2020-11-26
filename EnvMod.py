@@ -431,9 +431,9 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         compileFlags += "/std:" + stdlib + " /W3 /EHsc /FS "
         if env["debug"] == True:
             env.Append(LINKFLAGS = ["/DEBUG"])
-            env.Append(CXXFLAGS=["/MTd" if not env["dynamic"] else "MDd", "/Zi"])
+            env.Append(CXXFLAGS=["/MTd" if not env["dynamic"] else "MDd", "/Zi"])
         else:
-            compileFlags += " /O2 " + ("/MT" if not env["dynamic"] else "/MD") + " "
+            compileFlags += " /O2 " + ("/MT" if not env["dynamic"] else "/MD") + " "
     env.Append(CXXFLAGS = compileFlags.split(" "))
 
     if env["debug"] == True and useSan:
