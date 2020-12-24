@@ -119,7 +119,7 @@ class ZEnv:
         Utility method for cross-environment stuff, like for cases where you
         have a Program depending on a Library
         """
-        return (self.path if self.variantDir == "" else self.variantDir) + "/bin/"
+        return os.path.join((self.path if self.variantDir == "" else self.variantDir), "/bin/")
 
     def appendLibPath(self, libPath: str):
         if type(libPath) is not str:
