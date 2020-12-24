@@ -288,21 +288,6 @@ class ZEnv:
         """
         self.environment.Append(CPPDEFINES = [ variable ])
 
-
-# TODO: Implement cross compilation support
-def determinePath(env, compiler, debug, crossCompile = False):
-    """
-    Determines the path for the build output.
-    This is enabled to support multi-compiler attempts, and it's later
-    meant to faciliate for cross-compilation, if I find a need to add it.
-    """
-    arch = platform.architecture()
-    pf = env["PLATFORM"]
-    path = f"{compiler}.{pf}.{arch[0]}."
-
-    path += f"{'dbg' if debug == True else 'release'}/"
-    return path
-
 def normalizeCompilerName(name: str):
     """
     This function attempts to normalize compiler inputs (through CXX)
@@ -368,7 +353,8 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         ("profile", "Which profile to use for Conan, if Conan is enabled", "default"),
         ("settings", "Settings for Conan.", None),
         ("options", "Options for Conan", None),
-        ("dynamic", "(Windows only!) Whether to use /MT or /MD. False for MT, true for MD", False)
+        ("buildDirectory", "Build directory. Defaults to build/. This variable CANNOT be empty", "build/")
+        ("dynamic", "(Windows only!) Whether to use /MT or /MD. False for MT, true for MD", False),
         BoolVariable("coverage", "Adds the --coverage option", False)
     )
 
@@ -411,7 +397,9 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         env["CXX"] = CXX
         env["CC"] = CC
 
-    path = "build/" + determinePath(env, compiler, env["debug"])
+    path = env["buildDir"]
+    if (path == ""):
+        raise RuntimeError("buildDir cannot be empty.")
 
     compileFlags = ""
 
