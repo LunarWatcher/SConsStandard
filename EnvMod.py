@@ -203,7 +203,7 @@ class ZEnv:
             with open(self.path + "EnvMod.json", "w") as f:
                 json.dump(data, f)
 
-        conan = self.environment.SConscript(self.path + "SConscript_conan")
+        conan = self.environment.SConscript(os.path.join(self.path, "SConscript_conan"))
 
         self.environment.MergeFlags(conan["conan"])
 
