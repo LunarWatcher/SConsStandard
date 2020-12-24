@@ -11,8 +11,6 @@ from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Too
 # Lib imports
 from . import utils
 
-# TODO: Add support for cross compiling to a different platform (options + returning platform)
-
 class CompilerType(Enum):
     # Argument style: -whatever
     # examples: Clang, GCC
@@ -400,6 +398,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
     path = env["buildDir"]
     if (path == ""):
         raise RuntimeError("buildDir cannot be empty.")
+    print("Building in {}".format(path))
 
     compileFlags = ""
 
