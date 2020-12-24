@@ -57,7 +57,7 @@ class ZEnv:
         if source is None:
             # Used as a fallback to only type in once. Especially useful for lazy naming
             source = name
-        self.environment.VariantDir(self.path + "/" + name, source, **kwargs)
+        self.environment.VariantDir(os.path.join(self.path, name), source, **kwargs)
 
     def Glob(self, pattern, **kwargs):
         """
@@ -77,17 +77,17 @@ class ZEnv:
         return paths
 
     def FlavorSConscript(self, flavorName, script, **kwargs):
-        return self.SConscript(self.path + "/" + flavorName + "/" + script, **kwargs)
+        return self.SConscript(os.path.join(self.path, flavorName, script), **kwargs)
 
     def SConscript(self, script, variant_dir = None, **kwargs):
         if variant_dir is not None:
             # Patches the variant dir
-            variant_dir = self.path + "/" + variant_dir
+            variant_dir = os.path.join(self.path, variant_dir)
         else:
             # Automatic variant detection
             r = script.rsplit("/", 1)
             if (len(r) == 2):
-                variant_dir = self.path + r[0]
+                variant_dir = os.path.join(self.path, r[0])
             else:
                 variant_dir = self.path
         self.variantDir = variant_dir
@@ -158,7 +158,7 @@ class ZEnv:
                 name = remote["remote_name"]
                 url = remote["url"]
                 existingRemotes = conan.remote_list()
-                
+
                 filterByUrl = [eRem for eRem in existingRemotes if eRem.url == url]
                 if len(filterByUrl) > 0:
                     continue
@@ -177,8 +177,8 @@ class ZEnv:
         data = {
             "modified": 0
         }
-        if os.path.isfile(self.path + "EnvMod.json"):
-            with open(self.path + "EnvMod.json", "r") as f:
+        if os.path.isfile(os.path.join(self.path, "EnvMod.json")):
+            with open(os.path.join(self.path, "EnvMod.json"), "r") as f:
                 data = json.load(f)
 
         conanfilePath = os.path.join(os.getcwd(), "conanfile.txt") if conanfile is None else conanfile
@@ -200,7 +200,7 @@ class ZEnv:
                     build = [ "missing" ],
                     profile_names = [ profile ])
             data["modified"] = lastMod
-            with open(self.path + "EnvMod.json", "w") as f:
+            with open(os.path.join(self.path, "EnvMod.json"), "w") as f:
                 json.dump(data, f)
 
         conan = self.environment.SConscript(os.path.join(self.path, "SConscript_conan"))
