@@ -11,7 +11,7 @@ import SCons.Script as Script
 from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool, Configure
 # Lib imports
 from . import utils
-from ZEnv import CompilerType, ZEnv
+from . import ZEnv as ZEnvFile
 
 def normalizeCompilerName(name: str):
     """
@@ -54,7 +54,7 @@ def getCompiler(env):
     if (it1 == "$CC" or it1 == "cl"):
         # If the compiler equals $CC, then (my condolences,) you're running MSVC.
         # According to the docs, this should be the case.
-        return ("msvc", CompilerType.MSVC_COMPATIBLE)
+        return ("msvc", ZEnvFile.CompilerType.MSVC_COMPATIBLE)
 
     # if the environment variable CXX is used, this may not be a single word.
     # A manual override (such as `clang++ -target x86_64-pc-windows-gnu` would break later detection as well).
@@ -62,12 +62,12 @@ def getCompiler(env):
 
     if (it2[0] == "clang-cl"):
         # clang-cl is still Clang, but takes MSVC-style input.
-        return ("clang-cl", CompilerType.MSVC_COMPATIBLE)
+        return ("clang-cl", ZEnvFile.CompilerType.MSVC_COMPATIBLE)
 
     # For undefined cases, we'll assume it's a POSIX-compatible compiler.
     # (Note that this doesn't care what the target system is. This is just to detect the compiler being used,
     # and by extension which arguments to use)
-    return (normalizeCompilerName(it2[0]), CompilerType.POSIX)
+    return (normalizeCompilerName(it2[0]), ZEnvFile.CompilerType.POSIX)
 
 
 def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17", useSan = True, customVariables = None):
@@ -130,7 +130,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
 
     compileFlags = ""
 
-    if (argType == CompilerType.POSIX):
+    if (argType == ZEnvFile.CompilerType.POSIX):
         compileFlags += "-std=" + stdlib + " -pedantic -Wall -Wextra -Wno-c++11-narrowing"
         if env["debug"] == True:
             compileFlags += " -g -O0 "
@@ -150,9 +150,9 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
             compileFlags += " /O2 " + ("/MT" if not env["dynamic"] else "/MD") + " "
     env.Append(CXXFLAGS = compileFlags.split(" "))
 
-    zEnv = ZEnv(env, path, env["debug"], compiler, argType, variables)
+    zEnv = ZEnvFile.ZEnv(env, path, env["debug"], compiler, argType, variables)
     if env["debug"] == True and useSan:
-        if argType == CompilerType.POSIX:
+        if argType == ZEnvFile.CompilerType.POSIX:
             zEnv.environment.Append(CXXFLAGS = ["-fsanitize=undefined"])
 
         if env["PLATFORM"] != "win32":
