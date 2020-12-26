@@ -11,12 +11,16 @@ git submodule add git@github.com:LunarWatcher/SConsStandard.git
 ```
 
 ```python
-# Imports the EnvMod file. 
-import SConsStandard.EnvMod
+# Imports the project.
+# For full functionality, only import SConsStandard - don't import ZEnv.
+# __init__.py contains several of the core wrapper functions that build
+# basic library functionality, such as compiler detection and compiler flag 
+# resolution.
+import SConsStandard as scstd
 
 # Envmod has a single method called getEnvironment. This handles all the preprocessing
 # of the environment, including processing of variables.
-env = EnvMod.getEnvironment()
+env = scstd.getEnvironment()
 # type(env) = ZEnv(), a wrapper around environment. Note that it's a wrapper, not a child class.
 # For access to unimplemented behavior, `env.environment` returns the SCons.Script.Environment. 
 
