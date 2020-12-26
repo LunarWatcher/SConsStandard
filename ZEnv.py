@@ -240,7 +240,7 @@ class ZEnv:
         These have no effect on the ZEnv, for various implementation reasons.
         """
         newEnv = ZEnv(self.environment.Clone(*args, **kwargs), self.path, self.debug, self.compiler,
-                    self.argType)
+                    self.argType, self.variables)
         newEnv.sanitizers = self.sanitizers
         newEnv.libraries = self.libraries
         newEnv.compilerFlags = self.compilerFlags
