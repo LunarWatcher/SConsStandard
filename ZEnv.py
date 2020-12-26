@@ -293,4 +293,4 @@ class ZEnv:
         self.environment.Help(string)
 
     def addVariableHelp(self):
-        self.environment.Help(self.variables.GenerateHelpText())
+        self.environment.Help(self.variables.GenerateHelpText(self.environment))
