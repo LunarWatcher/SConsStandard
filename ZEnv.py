@@ -9,7 +9,7 @@ from pathlib import Path
 import SCons
 import SCons.Script as Script
 from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool, Configure
-from SCons.Environment import OverrideEnvironment
+from SCons.Environment import Base
 # Lib imports
 from . import utils
 
@@ -22,7 +22,7 @@ class CompilerType(Enum):
     # Examples: clang-cl, MSVC
     MSVC_COMPATIBLE = 2
 
-class ZEnv(OverrideEnvironment):
+class ZEnv(Base):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
