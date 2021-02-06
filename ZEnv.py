@@ -73,7 +73,7 @@ class ZEnv(Environment):
         This is a limitation of SCons, and one I'll
         have to figure out a workaround for Some Day:tm:
         """
-        return self.Glob(pattern, **kwargs)
+        return super().Glob(pattern, **kwargs)
 
     def CGlob(self, sourceDir, pattern = "**/*.cpp"):
         paths = []
