@@ -151,14 +151,14 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
             compileFlags += " /O2 " + ("/MT" if not env["dynamic"] else "/MD") + " "
     env.Append(CXXFLAGS = compileFlags.split(" "))
 
-    zEnv.inject(path, env["debug"], compiler, argType, variables)
+    env.inject(path, env["debug"], compiler, argType, variables)
     if env["debug"] == True and useSan:
         if argType == ZEnvFile.CompilerType.POSIX:
-            zEnv.Append(CXXFLAGS = ["-fsanitize=undefined"])
+            env.Append(CXXFLAGS = ["-fsanitize=undefined"])
 
         if env["PLATFORM"] != "win32":
-            zEnv.Append(LINKFLAGS=["-fsanitize=undefined"])
+            env.Append(LINKFLAGS=["-fsanitize=undefined"])
         elif (compiler != "msvc"):
             print("WARNING: Windows detected. MinGW doesn't have libubsan. Using crash instead (-fsanitize-undefined-trap-on-error)")
-            zEnv.Append(CXXFLAGS = ["-fsanitize-undefined-trap-on-error"])
-    return zEnv
+            env.Append(CXXFLAGS = ["-fsanitize-undefined-trap-on-error"])
+    return env
