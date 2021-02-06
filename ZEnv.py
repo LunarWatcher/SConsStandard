@@ -72,7 +72,7 @@ class ZEnv(Base):
         return paths
 
     def FlavorSConscript(self, flavorName, script, **kwargs):
-        return self.SConscript(os.path.join(self.path, flavorName, script), **kwargs)
+        return self.ESConscript(os.path.join(self.path, flavorName, script), **kwargs)
 
     def ESConscript(self, script, variant_dir = None, **kwargs):
         if variant_dir is not None:
@@ -198,9 +198,9 @@ class ZEnv(Base):
             with open(os.path.join(self.path, "EnvMod.json"), "w") as f:
                 json.dump(data, f)
 
-        conan = self.SConscript(os.path.join(self.path, "SConscript_conan"))
+        conan = self.ESConscript(os.path.join(self.path, "SConscript_conan"))
 
-        self.MergeFlags(conan["conan"])
+        super().MergeFlags(conan["conan"])
 
     def withCompilationDB(self, output = "compile_commands.json"):
         """
@@ -213,9 +213,9 @@ class ZEnv(Base):
 
         This method returns the database, which you can use to target stuff.
         """
-        self.EnsureSConsVersion(4, 0, 0)
-        self.Tool('compilation_db')
-        return self.CompilationDatabase(output)
+        super().EnsureSConsVersion(4, 0, 0)
+        super().Tool('compilation_db')
+        return super().CompilationDatabase(output)
 
     # Configuration utilities
     def configure(self):
@@ -279,10 +279,10 @@ class ZEnv(Base):
         """
         This method wraps environment.Append(CPPDEFINES).
         """
-        self.Append(CPPDEFINES = [ variable ])
+        super().Append(CPPDEFINES = [ variable ])
 
     def addHelp(self, string: str):
-        self.Help(string)
+        super().Help(string)
 
     def addVariableHelp(self):
-        self.Help(self.variables.GenerateHelpText(self))
+        super().Help(self.variables.GenerateHelpText(self))
