@@ -9,7 +9,6 @@ from pathlib import Path
 import SCons
 import SCons.Script as Script
 from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool, Configure
-from SCons.Environment import Base
 # Lib imports
 from . import utils
 
@@ -22,11 +21,10 @@ class CompilerType(Enum):
     # Examples: clang-cl, MSVC
     MSVC_COMPATIBLE = 2
 
-class ZEnv(Base):
+class ZEnv(Environment):
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._init_special()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def inject(self, path: str, debug: bool, compiler: str, argType: CompilerType,
                  variables: Variables):
@@ -45,26 +43,37 @@ class ZEnv(Base):
 
         self.stdlib = None
 
-    def EProgram(self, name: str, sources, **kwargs):
+    def Program(self, name: str, sources, **kwargs):
         return super().Program("bin/" + name, sources, **kwargs)
 
-    def ELibrary(self, name: str, sources, **kwargs):
+    def Library(self, name: str, sources, **kwargs):
         return super().Library("bin/" + name, sources, **kwargs)
 
-    def ESharedLibrary(self, name: str, sources, **kwargs):
+    def SharedLibrary(self, name: str, sources, **kwargs):
         return super().SharedLibrary("bin/" + name, sources, **kwargs)
 
-    def EStaticLibrary(self, name: str, sources, **kwargs):
+    def StaticLibrary(self, name: str, sources, **kwargs):
         return super().StaticLibrary("bin/" + name, sources, **kwargs)
 
-    def EVariantDir(self, target: str, source: str, **kwargs):
+    def VariantDir(self, target: str, source: str, **kwargs):
         super().VariantDir(target, source)
 
-    def EFlavor(self, name: str, source = None, **kwargs):
+    def Flavor(self, name: str, source = None, **kwargs):
         if source is None:
             # Used as a fallback to only type in once. Especially useful for lazy naming
             source = name
-        self.VariantDir(os.path.join(self.path, name), source, **kwargs)
+        super().VariantDir(os.path.join(self.path, name), source, **kwargs)
+
+    def Glob(self, pattern, **kwargs):
+        """
+        Wrapper around SCons' Glob method.
+        Note that this is NOT recursive!
+        folder/*.cpp means folder/*.cpp, not
+        folder/subfolder/*.cpp.
+        This is a limitation of SCons, and one I'll
+        have to figure out a workaround for Some Day:tm:
+        """
+        return self.Glob(pattern, **kwargs)
 
     def CGlob(self, sourceDir, pattern = "**/*.cpp"):
         paths = []
@@ -73,9 +82,9 @@ class ZEnv(Base):
         return paths
 
     def FlavorSConscript(self, flavorName, script, **kwargs):
-        return self.ESConscript(os.path.join(self.path, flavorName, script), **kwargs)
+        return self.SConscript(os.path.join(self.path, flavorName, script), **kwargs)
 
-    def ESConscript(self, script, variant_dir = None, **kwargs):
+    def SConscript(self, script, variant_dir = None, **kwargs):
         if variant_dir is not None:
             # Patches the variant dir
             variant_dir = os.path.join(self.path, variant_dir)
@@ -92,7 +101,7 @@ class ZEnv(Base):
             exports.update(kwargs["exports"])
             del kwargs["exports"]
 
-        return self.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
+        return super().SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
 
     def withLibraries(self, libraries: list, append: bool = True):
         """
@@ -199,9 +208,9 @@ class ZEnv(Base):
             with open(os.path.join(self.path, "EnvMod.json"), "w") as f:
                 json.dump(data, f)
 
-        conan = self.ESConscript(os.path.join(self.path, "SConscript_conan"))
+        conan = self.SConscript(os.path.join(self.path, "SConscript_conan"))
 
-        super().MergeFlags(conan["conan"])
+        self.MergeFlags(conan["conan"])
 
     def withCompilationDB(self, output = "compile_commands.json"):
         """
@@ -214,9 +223,9 @@ class ZEnv(Base):
 
         This method returns the database, which you can use to target stuff.
         """
-        super().EnsureSConsVersion(4, 0, 0)
-        super().Tool('compilation_db')
-        return super().CompilationDatabase(output)
+        self.EnsureSConsVersion(4, 0, 0)
+        self.Tool('compilation_db')
+        return self.CompilationDatabase(output)
 
     # Configuration utilities
     def configure(self):
@@ -280,10 +289,10 @@ class ZEnv(Base):
         """
         This method wraps environment.Append(CPPDEFINES).
         """
-        super().Append(CPPDEFINES = [ variable ])
+        self.Append(CPPDEFINES = [ variable ])
 
     def addHelp(self, string: str):
-        super().Help(string)
+        self.Help(string)
 
     def addVariableHelp(self):
-        super().Help(self.variables.GenerateHelpText(self))
+        self.Help(self.variables.GenerateHelpText(self))
