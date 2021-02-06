@@ -21,9 +21,12 @@ class CompilerType(Enum):
     # Examples: clang-cl, MSVC
     MSVC_COMPATIBLE = 2
 
-class ZEnv:
+class ZEnv(Environment):
 
-    def __init__(self, environment: Environment, path: str, debug: bool, compiler: str, argType: CompilerType,
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def inject(self, path: str, debug: bool, compiler: str, argType: CompilerType,
                  variables: Variables):
         self.environment = environment;
         self.path = path;
