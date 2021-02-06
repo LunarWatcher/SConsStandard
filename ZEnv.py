@@ -44,25 +44,25 @@ class ZEnv(Environment):
         self.stdlib = None
 
     def Program(self, name: str, sources, **kwargs):
-        return self.Program("bin/" + name, sources, **kwargs)
+        return super().Program("bin/" + name, sources, **kwargs)
 
     def Library(self, name: str, sources, **kwargs):
-        return self.Library("bin/" + name, sources, **kwargs)
+        return super().Library("bin/" + name, sources, **kwargs)
 
     def SharedLibrary(self, name: str, sources, **kwargs):
-        return self.SharedLibrary("bin/" + name, sources, **kwargs)
+        return super().SharedLibrary("bin/" + name, sources, **kwargs)
 
     def StaticLibrary(self, name: str, sources, **kwargs):
-        return self.StaticLibrary("bin/" + name, sources, **kwargs)
+        return super().StaticLibrary("bin/" + name, sources, **kwargs)
 
     def VariantDir(self, target: str, source: str, **kwargs):
-        self.VariantDir(target, source)
+        super().VariantDir(target, source)
 
     def Flavor(self, name: str, source = None, **kwargs):
         if source is None:
             # Used as a fallback to only type in once. Especially useful for lazy naming
             source = name
-        self.VariantDir(os.path.join(self.path, name), source, **kwargs)
+        super().VariantDir(os.path.join(self.path, name), source, **kwargs)
 
     def Glob(self, pattern, **kwargs):
         """
@@ -101,7 +101,7 @@ class ZEnv(Environment):
             exports.update(kwargs["exports"])
             del kwargs["exports"]
 
-        return self.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
+        return super().SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
 
     def withLibraries(self, libraries: list, append: bool = True):
         """
@@ -115,9 +115,9 @@ class ZEnv(Environment):
             aLibs.append(libraries)
 
         if append:
-            self.Append(LIBS = aLibs)
+            super().Append(LIBS = aLibs)
         else:
-            self.Prepend(LIBS = aLibs)
+            super().Prepend(LIBS = aLibs)
 
     def getBinPath(self):
         """
@@ -129,13 +129,13 @@ class ZEnv(Environment):
     def appendLibPath(self, libPath: str):
         if type(libPath) is not str:
             raise RuntimeError("You can only append strings, not " + str(type(libPath)))
-        self.Append(LIBPATH = [libPath])
+        super().Append(LIBPATH = [libPath])
 
 
     def appendSourcePath(self, sourcePath: str):
         if type(sourcePath) is not str:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
-        self.Append(CPPPATH = [sourcePath])
+        super().Append(CPPPATH = [sourcePath])
 
     def withConan(self, conanfile: str = None, options: list = [], settings: list = [], remotes = []):
         if options is None:
