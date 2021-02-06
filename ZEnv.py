@@ -64,7 +64,7 @@ class ZEnv(Base):
         if source is None:
             # Used as a fallback to only type in once. Especially useful for lazy naming
             source = name
-        super().VariantDir(os.path.join(self.path, name), source, **kwargs)
+        self.VariantDir(os.path.join(self.path, name), source, **kwargs)
 
     def CGlob(self, sourceDir, pattern = "**/*.cpp"):
         paths = []
@@ -92,7 +92,7 @@ class ZEnv(Base):
             exports.update(kwargs["exports"])
             del kwargs["exports"]
 
-        return super().SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
+        return self.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
 
     def withLibraries(self, libraries: list, append: bool = True):
         """
