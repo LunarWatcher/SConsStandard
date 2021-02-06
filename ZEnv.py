@@ -129,7 +129,6 @@ class ZEnv:
             raise RuntimeError("You can only append strings, not " + str(type(libPath)))
         self.environment.Append(LIBPATH = [libPath])
 
-
     def appendSourcePath(self, sourcePath: str):
         if type(sourcePath) is not str:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
@@ -289,9 +288,6 @@ class ZEnv:
         """
         self.environment.Append(CPPDEFINES = [ variable ])
 
-    def addHelp(self, string: str):
-        self.environment.Help(string)
-
     def addVariableHelp(self):
         self.environment.Help(self.variables.GenerateHelpText(self.environment))
 
@@ -299,7 +295,6 @@ class ZEnv:
         return self.environment[item]
 
     def __getattr__(self, item):
-        print(dir(self))
         if item in self.__dict__ or item in dir(self):
             return getattr(self, item)
         return getattr(self.environment, item)

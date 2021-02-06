@@ -30,4 +30,12 @@ env.SConscript("src/SConscript", duplicate = 0)
 
 Where src/SConscript is a file at that location. This wrapper builds heavily on the use of SConscript files (because VariantDir was a complete pain in the ass to set up, and the entire thing is overall confusing).
 
+# Compatibility
 
+The first labeled release (v1.0.0) includes complete forwarding of methods. Any methods not present in ZEnv are forwarded to an SCons Environment are forwarded to the underlying (and exposed) `environment` object. This means the environment is now completely compatible with the standard Environment implementation.
+
+Missing calls are forwarded due to a bit of SCons weirdness that prevents simple things like Program and SConscript from being included in the instance. I wasn't able to track down the reason behind this, so forwarding was the obvious option.
+
+Note that the forwarding prioritizes the functions defined in ZEnv over the ones defined in Environment. If you need to use the default, unmodified methods, use `env.environment` (where env is a ZEnv).
+
+This means you can use the fancy methods in your object, but also forward it to SConscript files and let other scripts use the primitive methods. This should theoretically not break stuff, but hasn't been tested on a large scale.
