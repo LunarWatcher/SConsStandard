@@ -21,7 +21,7 @@ class CompilerType(Enum):
     # Examples: clang-cl, MSVC
     MSVC_COMPATIBLE = 2
 
-class ZEnv(Environment.Environment):
+class ZEnv(Environment.OverrideEnvironment):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
