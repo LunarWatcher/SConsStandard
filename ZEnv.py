@@ -43,37 +43,26 @@ class ZEnv(Environment):
 
         self.stdlib = None
 
-    def Program(self, name: str, sources, **kwargs):
+    def EProgram(self, name: str, sources, **kwargs):
         return super().Program("bin/" + name, sources, **kwargs)
 
-    def Library(self, name: str, sources, **kwargs):
+    def ELibrary(self, name: str, sources, **kwargs):
         return super().Library("bin/" + name, sources, **kwargs)
 
-    def SharedLibrary(self, name: str, sources, **kwargs):
+    def ESharedLibrary(self, name: str, sources, **kwargs):
         return super().SharedLibrary("bin/" + name, sources, **kwargs)
 
-    def StaticLibrary(self, name: str, sources, **kwargs):
+    def EStaticLibrary(self, name: str, sources, **kwargs):
         return super().StaticLibrary("bin/" + name, sources, **kwargs)
 
-    def VariantDir(self, target: str, source: str, **kwargs):
+    def EVariantDir(self, target: str, source: str, **kwargs):
         super().VariantDir(target, source)
 
-    def Flavor(self, name: str, source = None, **kwargs):
+    def EFlavor(self, name: str, source = None, **kwargs):
         if source is None:
             # Used as a fallback to only type in once. Especially useful for lazy naming
             source = name
         super().VariantDir(os.path.join(self.path, name), source, **kwargs)
-
-    def Glob(self, pattern, **kwargs):
-        """
-        Wrapper around SCons' Glob method.
-        Note that this is NOT recursive!
-        folder/*.cpp means folder/*.cpp, not
-        folder/subfolder/*.cpp.
-        This is a limitation of SCons, and one I'll
-        have to figure out a workaround for Some Day:tm:
-        """
-        return super().Glob(pattern, **kwargs)
 
     def CGlob(self, sourceDir, pattern = "**/*.cpp"):
         paths = []
@@ -84,7 +73,7 @@ class ZEnv(Environment):
     def FlavorSConscript(self, flavorName, script, **kwargs):
         return self.SConscript(os.path.join(self.path, flavorName, script), **kwargs)
 
-    def SConscript(self, script, variant_dir = None, **kwargs):
+    def ESConscript(self, script, variant_dir = None, **kwargs):
         if variant_dir is not None:
             # Patches the variant dir
             variant_dir = os.path.join(self.path, variant_dir)
