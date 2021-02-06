@@ -41,7 +41,7 @@ class ZEnv:
 
         self.stdlib = None
 
-   def Program(self, name: str, sources, **kwargs):
+    def Program(self, name: str, sources, **kwargs):
         return self.environment.Program("bin/" + name, sources, **kwargs)
 
     def Library(self, name: str, sources, **kwargs):
