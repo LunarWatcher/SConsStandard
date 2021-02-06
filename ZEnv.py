@@ -41,6 +41,18 @@ class ZEnv:
 
         self.stdlib = None
 
+   def Program(self, name: str, sources, **kwargs):
+        return self.environment.Program("bin/" + name, sources, **kwargs)
+
+    def Library(self, name: str, sources, **kwargs):
+        return self.environment.Library("bin/" + name, sources, **kwargs)
+
+    def SharedLibrary(self, name: str, sources, **kwargs):
+        return self.environment.SharedLibrary("bin/" + name, sources, **kwargs)
+
+    def StaticLibrary(self, name: str, sources, **kwargs):
+        return self.environment.StaticLibrary("bin/" + name, sources, **kwargs)
+
     def VariantDir(self, target: str, source: str, **kwargs):
         self.environment.VariantDir(target, source)
 
