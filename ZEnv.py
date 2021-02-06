@@ -8,7 +8,7 @@ from pathlib import Path
 
 import SCons
 import SCons.Script as Script
-from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool, Configure
+from SCons.Script import Variables, BoolVariable, EnumVariable, Default, Environment, Tool, Configure
 # Lib imports
 from . import utils
 
