@@ -26,7 +26,7 @@ class ZEnv(Base):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        print("Hi")
+        self._init_special()
 
     def inject(self, path: str, debug: bool, compiler: str, argType: CompilerType,
                  variables: Variables):
