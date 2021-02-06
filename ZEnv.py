@@ -24,8 +24,9 @@ class CompilerType(Enum):
 
 class ZEnv(Base):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        print("Hi")
 
     def inject(self, path: str, debug: bool, compiler: str, argType: CompilerType,
                  variables: Variables):
