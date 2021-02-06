@@ -21,20 +21,18 @@ class CompilerType(Enum):
     # Examples: clang-cl, MSVC
     MSVC_COMPATIBLE = 2
 
-class ZEnv(Environment):
+class ZEnv:
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def inject(self, path: str, debug: bool, compiler: str, argType: CompilerType,
+    def __init__(self, environment: Environment, path: str, debug: bool, compiler: str, argType: CompilerType,
                  variables: Variables):
+        self.environment = environment;
         self.path = path;
         self.debug = debug;
         self.compiler = compiler;
         self.argType = argType;
         self.variables = variables;
 
-        self.sourceFlags = self["CXXFLAGS"]
+        self.sourceFlags = environment["CXXFLAGS"]
 
         self.sanitizers = []
         self.libraries = []
@@ -44,25 +42,25 @@ class ZEnv(Environment):
         self.stdlib = None
 
     def Program(self, name: str, sources, **kwargs):
-        return super().Program("bin/" + name, sources, **kwargs)
+        return self.environment.Program("bin/" + name, sources, **kwargs)
 
     def Library(self, name: str, sources, **kwargs):
-        return super().Library("bin/" + name, sources, **kwargs)
+        return self.environment.Library("bin/" + name, sources, **kwargs)
 
     def SharedLibrary(self, name: str, sources, **kwargs):
-        return super().SharedLibrary("bin/" + name, sources, **kwargs)
+        return self.environment.SharedLibrary("bin/" + name, sources, **kwargs)
 
     def StaticLibrary(self, name: str, sources, **kwargs):
-        return super().StaticLibrary("bin/" + name, sources, **kwargs)
+        return self.environment.StaticLibrary("bin/" + name, sources, **kwargs)
 
     def VariantDir(self, target: str, source: str, **kwargs):
-        super().VariantDir(target, source)
+        self.environment.VariantDir(target, source)
 
     def Flavor(self, name: str, source = None, **kwargs):
         if source is None:
             # Used as a fallback to only type in once. Especially useful for lazy naming
             source = name
-        super().VariantDir(os.path.join(self.path, name), source, **kwargs)
+        self.environment.VariantDir(os.path.join(self.path, name), source, **kwargs)
 
     def Glob(self, pattern, **kwargs):
         """
@@ -73,7 +71,7 @@ class ZEnv(Environment):
         This is a limitation of SCons, and one I'll
         have to figure out a workaround for Some Day:tm:
         """
-        return self.Glob(pattern, **kwargs)
+        return self.environment.Glob(pattern, **kwargs)
 
     def CGlob(self, sourceDir, pattern = "**/*.cpp"):
         paths = []
@@ -101,7 +99,7 @@ class ZEnv(Environment):
             exports.update(kwargs["exports"])
             del kwargs["exports"]
 
-        return super().SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
+        return self.environment.SConscript(script, exports = exports, variant_dir = variant_dir, **kwargs)
 
     def withLibraries(self, libraries: list, append: bool = True):
         """
@@ -115,9 +113,9 @@ class ZEnv(Environment):
             aLibs.append(libraries)
 
         if append:
-            super().Append(LIBS = aLibs)
+            self.environment.Append(LIBS = aLibs)
         else:
-            super().Prepend(LIBS = aLibs)
+            self.environment.Prepend(LIBS = aLibs)
 
     def getBinPath(self):
         """
@@ -129,13 +127,13 @@ class ZEnv(Environment):
     def appendLibPath(self, libPath: str):
         if type(libPath) is not str:
             raise RuntimeError("You can only append strings, not " + str(type(libPath)))
-        super().Append(LIBPATH = [libPath])
+        self.environment.Append(LIBPATH = [libPath])
 
 
     def appendSourcePath(self, sourcePath: str):
         if type(sourcePath) is not str:
             raise RuntimeError("You can only append strings, not " + str(type(sourcePath)))
-        super().Append(CPPPATH = [sourcePath])
+        self.environment.Append(CPPPATH = [sourcePath])
 
     def withConan(self, conanfile: str = None, options: list = [], settings: list = [], remotes = []):
         if options is None:
@@ -192,11 +190,11 @@ class ZEnv(Environment):
 
         lastMod = os.path.getmtime(conanfilePath)
         if data["modified"] < lastMod:
-            profile = self["profile"] if "profile" in self else "default"
-            if "settings" in self:
-                settings = settings + self["settings"].split(",")
-            if "options" in self:
-                options = options + self["options"].split(",")
+            profile = self.environment["profile"] if "profile" in self.environment else "default"
+            if "settings" in self.environment:
+                settings = settings + self.environment["settings"].split(",")
+            if "options" in self.environment:
+                options = options + self.environment["options"].split(",")
             conan.install(conanfilePath,
                     generators = ["scons"],
                     install_folder = buildDirectory,
@@ -208,9 +206,9 @@ class ZEnv(Environment):
             with open(os.path.join(self.path, "EnvMod.json"), "w") as f:
                 json.dump(data, f)
 
-        conan = self.SConscript(os.path.join(self.path, "SConscript_conan"))
+        conan = self.environment.SConscript(os.path.join(self.path, "SConscript_conan"))
 
-        self.MergeFlags(conan["conan"])
+        self.environment.MergeFlags(conan["conan"])
 
     def withCompilationDB(self, output = "compile_commands.json"):
         """
@@ -223,9 +221,9 @@ class ZEnv(Environment):
 
         This method returns the database, which you can use to target stuff.
         """
-        self.EnsureSConsVersion(4, 0, 0)
-        self.Tool('compilation_db')
-        return self.CompilationDatabase(output)
+        self.environment.EnsureSConsVersion(4, 0, 0)
+        self.environment.Tool('compilation_db')
+        return self.environment.CompilationDatabase(output)
 
     # Configuration utilities
     def configure(self):
@@ -241,7 +239,7 @@ class ZEnv(Environment):
         Any args and/or kwargs are forwarded to the environment provided by SCons.
         These have no effect on the ZEnv, for various implementation reasons.
         """
-        newEnv = ZEnv(self.Clone(*args, **kwargs), self.path, self.debug, self.compiler,
+        newEnv = ZEnv(self.environment.Clone(*args, **kwargs), self.path, self.debug, self.compiler,
                     self.argType, self.variables)
         newEnv.sanitizers = self.sanitizers
         newEnv.libraries = self.libraries
@@ -251,7 +249,7 @@ class ZEnv(Environment):
         return newEnv
 
     def getEnvVar(self, key: str):
-        return self[key]
+        return self.environment[key]
 
     def includeSysVars(self, *keys, **kwargs):
         """
@@ -277,11 +275,11 @@ class ZEnv(Environment):
                 if key in keys:
                     continue
 
-                self["ENV"][key] = value;
+                self.environment["ENV"][key] = value;
             return;
         for key in keys:
             try:
-                self["ENV"][key] = os.environ[key]
+                self.environment["ENV"][key] = os.environ[key]
             except:
                 pass
 
@@ -289,10 +287,10 @@ class ZEnv(Environment):
         """
         This method wraps environment.Append(CPPDEFINES).
         """
-        self.Append(CPPDEFINES = [ variable ])
+        self.environment.Append(CPPDEFINES = [ variable ])
 
     def addHelp(self, string: str):
-        self.Help(string)
+        self.environment.Help(string)
 
     def addVariableHelp(self):
-        self.Help(self.variables.GenerateHelpText(self))
+        self.environment.Help(self.variables.GenerateHelpText(self.environment))

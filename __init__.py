@@ -10,7 +10,6 @@ import SCons
 import SCons.Script as Script
 from SCons.Script import Variables, BoolVariable, EnumVariable, Environment, Tool, Configure
 # Lib imports
-# These have to be relative, because SCons is dumb xd
 from . import utils
 from . import ZEnv as ZEnvFile
 
@@ -103,7 +102,7 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
         else:
             tools = None;
     else: tools = None;
-    env = ZEnvFile.ZEnv(variables = variables,
+    env = Environment(variables = variables,
                       ENV = envVars, tools = tools)
 
     (compiler, argType) = getCompiler(env)
@@ -151,14 +150,14 @@ def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: st
             compileFlags += " /O2 " + ("/MT" if not env["dynamic"] else "/MD") + " "
     env.Append(CXXFLAGS = compileFlags.split(" "))
 
-    env.inject(path, env["debug"], compiler, argType, variables)
+    zEnv = ZEnvFile.ZEnv(env, path, env["debug"], compiler, argType, variables)
     if env["debug"] == True and useSan:
         if argType == ZEnvFile.CompilerType.POSIX:
-            env.Append(CXXFLAGS = ["-fsanitize=undefined"])
+            zEnv.environment.Append(CXXFLAGS = ["-fsanitize=undefined"])
 
         if env["PLATFORM"] != "win32":
-            env.Append(LINKFLAGS=["-fsanitize=undefined"])
+            zEnv.environment.Append(LINKFLAGS=["-fsanitize=undefined"])
         elif (compiler != "msvc"):
             print("WARNING: Windows detected. MinGW doesn't have libubsan. Using crash instead (-fsanitize-undefined-trap-on-error)")
-            env.Append(CXXFLAGS = ["-fsanitize-undefined-trap-on-error"])
-    return env
+            zEnv.environment.Append(CXXFLAGS = ["-fsanitize-undefined-trap-on-error"])
+    return zEnv
