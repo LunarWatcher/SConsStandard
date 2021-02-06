@@ -287,4 +287,6 @@ class ZEnv:
         return self.environment[item]
 
     def __getattr__(self, item):
+        if item in self.__dict__:
+            return getattr(self, item)
         return getattr(self.environment, item)
