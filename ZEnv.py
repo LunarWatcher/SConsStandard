@@ -283,7 +283,7 @@ class ZEnv:
                 pass
 
     def isMSVC(self):
-        return self.compiler == CompilerType.MSVC_COMPATIBLE
+        return self.compiler == "msvc"
 
     def define(self, variable: str):
         """
