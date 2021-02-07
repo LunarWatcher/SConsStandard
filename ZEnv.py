@@ -282,6 +282,9 @@ class ZEnv:
             except:
                 pass
 
+    def isMSVC(self):
+        return self.compiler == CompilerType.MSVC_COMPATIBLE
+
     def define(self, variable: str):
         """
         This method wraps environment.Append(CPPDEFINES).
