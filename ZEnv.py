@@ -291,6 +291,9 @@ class ZEnv:
         """
         self.environment.Append(CPPDEFINES = [ variable ])
 
+    def addHelp(self, string: str):
+        self.environment.Help(string)
+
     def addVariableHelp(self):
         self.environment.Help(self.variables.GenerateHelpText(self.environment))
 
