@@ -73,7 +73,7 @@ def getCompiler(env):
 def getEnvironment(defaultDebug: bool = True, libraries: bool = True, stdlib: str = "c++17", useSan = True, customVariables = None):
     variables = Script.Variables()
     variables.AddVariables(
-        BoolVariable("debug", "Build with the debug flag and reduced optimization.", os.getenv("LUNASCONS_DEBUG", "False").lower() in ["true", "1", "yes"]),
+        BoolVariable("debug", "Build with the debug flag and reduced optimization. `export LUNASCONS_DEBUG=true` to default debug to true", os.getenv("LUNASCONS_DEBUG", "False").lower() in ["true", "1", "yes"]),
         BoolVariable("systemCompiler", "Whether to use CXX/CC from the environment variables.", True),
         ("profile", "Which profile to use for Conan, if Conan is enabled", "default"),
         ("settings", "Settings for Conan.", None),

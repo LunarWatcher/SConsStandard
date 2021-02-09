@@ -1,6 +1,7 @@
 ## 09.02.2021
 
 * Fix fuckup from the 6th accidentally removing addHelp() (also removed other functions by accident, but this was fixed earlier)
+* Add debug control variable
 
 ## 06.02.2021
 
