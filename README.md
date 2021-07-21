@@ -1,3 +1,9 @@
+# Deprecation notice
+
+SCons made it incredibly hard to use dynamic libraries for a (failed) project I had a few months ago (at the time of writing). Consequently, I've switched to CMake, and I find it easier to deal with for C and C++ in general.
+
+As a consequence, this repo is now deprecated. Feel free to continue using it, or taking inspiration from it into your own SConstruct or default SCons implementation, but the project won't be receiving further patches.
+
 # SCons Standard
 
 This is my standard implementation of the basic components in a SConstruct. This is to save time and not have to re-write code every time I have a project. This will expand with new features as I stumble over a need for them, so it will not be a 100% perfect implementation for all cases. It's also based on my project standard. 
